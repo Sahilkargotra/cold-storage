@@ -4,6 +4,7 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/@vrushabh-b/oneiot-ui/dist/**/*.{js,mjs}",
   ],
   theme: {
     extend: {
@@ -66,5 +67,5 @@ export default {
       }
     }
   },
-  plugins: [],
+  plugins: [require('tailwindcss-animate')],
 }

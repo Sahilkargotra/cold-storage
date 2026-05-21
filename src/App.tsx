@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { AppSidebar, useTheme, SidebarProvider, SidebarInset, SidebarTrigger } from '@vrushabh-b/oneiot-ui';
+import { AppSidebar, useTheme, SidebarProvider, SidebarInset, SidebarTrigger, Sheet } from '@vrushabh-b/oneiot-ui';
 import { Building2, Map, Network, AlertTriangle, FileText, Settings } from 'lucide-react';
-import { FacilityDashboardWithTabs } from './components/dashboard/FacilityDashboardWithTabs';
+import { FacilityDashboardWithTabs, FacilityTabBar, FacilityAlertsButton, FacilityAlertsSheetContent } from './components/dashboard/FacilityDashboardWithTabs';
 import { RegionalDashboardWithTabs } from './components/dashboard/RegionalDashboardWithTabs';
 import { HQDashboardWithTabs } from './components/dashboard/HQDashboardWithTabs';
 import brandLogoWhite from '@/assets/brandLogoWhite.png';
@@ -36,6 +36,7 @@ function LogoExpanded() {
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('facility');
+  const [facilityTab, setFacilityTab] = useState('operations');
 
   const currentPath = VIEW_PATHS[currentView];
 
@@ -91,35 +92,52 @@ function App() {
 
   const renderDashboard = () => {
     switch (currentView) {
-      case 'facility': return <FacilityDashboardWithTabs />;
+      case 'facility': return <FacilityDashboardWithTabs tab={facilityTab} setTab={setFacilityTab} />;
       case 'regional': return <RegionalDashboardWithTabs />;
       case 'hq': return <HQDashboardWithTabs />;
     }
   };
 
+  const renderHeaderExtras = () => {
+    if (currentView === 'facility') {
+      return (
+        <>
+          <div className="flex-1" />
+          <FacilityAlertsButton />
+          <FacilityTabBar tab={facilityTab} setTab={setFacilityTab} />
+        </>
+      );
+    }
+    return <div className="flex-1" />;
+  };
+
   return (
     <div className="ui-v2 bg-background text-foreground min-h-screen">
-      <SidebarProvider>
-        <AppSidebar
-          navItems={navItems}
-          user={user}
-          currentPath={currentPath}
-          logoExpanded={<LogoExpanded />}
-          logoCollapsed={<img src={brandLogoCollapsed} alt="OneIoT" className="h-7 w-7 object-contain" />}
-          showThemeToggle
-          renderLink={renderLink}
-        />
-        <SidebarInset>
-          <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background/80 backdrop-blur px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="h-4 w-px bg-border" />
-            {/* <span className="text-sm font-medium text-foreground">{VIEW_LABELS[currentView]}</span> */}
-          </header>
-          <main className="p-6">
-            {renderDashboard()}
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
+      <Sheet>
+        <SidebarProvider>
+          <AppSidebar
+            navItems={navItems}
+            user={user}
+            currentPath={currentPath}
+            logoExpanded={<LogoExpanded />}
+            logoCollapsed={<img src={brandLogoCollapsed} alt="OneIoT" className="h-4 w-4" />}
+            showThemeToggle
+            renderLink={renderLink}
+          />
+          <SidebarInset>
+            <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background/80 backdrop-blur px-4">
+              <SidebarTrigger className="-ml-1" />
+              <div className="h-4 w-px bg-border" />
+              <span className="text-sm font-medium text-foreground">{VIEW_LABELS[currentView]}</span>
+              {renderHeaderExtras()}
+            </header>
+            <main className="p-6">
+              {renderDashboard()}
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
+        {currentView === 'facility' && <FacilityAlertsSheetContent />}
+      </Sheet>
     </div>
   );
 }

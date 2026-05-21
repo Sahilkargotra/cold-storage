@@ -55,9 +55,23 @@ interface Zone {
   };
   occupancy: number; // percentage
   products: {
+    sku: string;
     name: string;
-    quantity: number; // tonnes
+    category: 'fruits' | 'vegetables' | 'dairy' | 'meat' | 'poultry' | 'seafood' | 'frozen-foods' | 'pharma' | 'other';
+    brand: string;
+    supplier: string;
+    batchNumber: string;
+    lotNumber: string;
+    unitType: 'kg' | 'tonne' | 'box' | 'pallet' | 'crate';
+    quantity: number;
+    shelfLifeDays: number;
+    entryDate: string;
     expiryDate: string;
+    storageMinTemp: number;
+    storageMaxTemp: number;
+    humidityMin: number;
+    humidityMax: number;
+    barcode: string;
     value: number; // INR
   }[];
   alerts: {
@@ -147,9 +161,27 @@ export const chennaiFacility: Facility = {
       },
       occupancy: 90,
       products: [
-        { name: 'Potatoes', quantity: 120, expiryDate: '2025-03-15', value: 480000 },
-        { name: 'Onions', quantity: 140, expiryDate: '2025-02-28', value: 420000 },
-        { name: 'Citrus Fruits', quantity: 100, expiryDate: '2025-02-15', value: 600000 }
+        {
+          sku: 'POT-001', name: 'Potatoes', category: 'vegetables', brand: 'FarmFresh', supplier: 'Krishnamurthy Farms',
+          batchNumber: 'B-2025-011', lotNumber: 'LOT-KF-0115', unitType: 'tonne', quantity: 120,
+          shelfLifeDays: 90, entryDate: '2025-01-05', expiryDate: '2025-03-15',
+          storageMinTemp: 8, storageMaxTemp: 12, humidityMin: 85, humidityMax: 95,
+          barcode: '8901234560011', value: 480000,
+        },
+        {
+          sku: 'ONI-002', name: 'Onions', category: 'vegetables', brand: 'AgriGold', supplier: 'Nashik Agro Exports',
+          batchNumber: 'B-2025-008', lotNumber: 'LOT-NA-0108', unitType: 'tonne', quantity: 140,
+          shelfLifeDays: 60, entryDate: '2024-12-30', expiryDate: '2025-02-28',
+          storageMinTemp: 0, storageMaxTemp: 4, humidityMin: 65, humidityMax: 70,
+          barcode: '8901234560028', value: 420000,
+        },
+        {
+          sku: 'CIT-003', name: 'Citrus Fruits', category: 'fruits', brand: 'SunGrow', supplier: 'Coorg Citrus Co.',
+          batchNumber: 'B-2025-010', lotNumber: 'LOT-CC-0110', unitType: 'crate', quantity: 100,
+          shelfLifeDays: 45, entryDate: '2025-01-02', expiryDate: '2025-02-15',
+          storageMinTemp: 8, storageMaxTemp: 13, humidityMin: 85, humidityMax: 95,
+          barcode: '8901234560035', value: 600000,
+        },
       ],
       alerts: []
     },
@@ -198,9 +230,27 @@ export const chennaiFacility: Facility = {
       },
       occupancy: 85,
       products: [
-        { name: 'Dairy Products', quantity: 180, expiryDate: '2025-02-20', value: 1080000 },
-        { name: 'Fresh Meat', quantity: 150, expiryDate: '2025-01-22', value: 900000 },
-        { name: 'Poultry', quantity: 180, expiryDate: '2025-01-25', value: 720000 }
+        {
+          sku: 'DAI-004', name: 'Dairy Products (Paneer)', category: 'dairy', brand: 'Amul', supplier: 'Gujarat Co-op Milk Federation',
+          batchNumber: 'B-2025-014', lotNumber: 'LOT-AM-0114', unitType: 'box', quantity: 180,
+          shelfLifeDays: 40, entryDate: '2025-01-12', expiryDate: '2025-02-20',
+          storageMinTemp: 1, storageMaxTemp: 4, humidityMin: 80, humidityMax: 90,
+          barcode: '8901058000044', value: 1080000,
+        },
+        {
+          sku: 'MEA-005', name: 'Fresh Mutton', category: 'meat', brand: 'FreshCut', supplier: 'Chennai Meat Supplies',
+          batchNumber: 'B-2025-015', lotNumber: 'LOT-CM-0115', unitType: 'kg', quantity: 150,
+          shelfLifeDays: 7, entryDate: '2025-01-15', expiryDate: '2025-01-22',
+          storageMinTemp: 0, storageMaxTemp: 4, humidityMin: 85, humidityMax: 95,
+          barcode: '8901234560059', value: 900000,
+        },
+        {
+          sku: 'PLT-006', name: 'Poultry (Chicken)', category: 'poultry', brand: 'Suguna', supplier: 'Suguna Foods Pvt Ltd',
+          batchNumber: 'B-2025-016', lotNumber: 'LOT-SF-0115', unitType: 'kg', quantity: 180,
+          shelfLifeDays: 10, entryDate: '2025-01-15', expiryDate: '2025-01-25',
+          storageMinTemp: 0, storageMaxTemp: 4, humidityMin: 85, humidityMax: 95,
+          barcode: '8901234560066', value: 720000,
+        },
       ],
       alerts: [
         {
@@ -255,10 +305,34 @@ export const chennaiFacility: Facility = {
       },
       occupancy: 86,
       products: [
-        { name: 'Frozen Seafood', quantity: 300, expiryDate: '2025-06-15', value: 2400000 },
-        { name: 'Frozen Meat', quantity: 280, expiryDate: '2025-05-20', value: 1960000 },
-        { name: 'Ice Cream', quantity: 180, expiryDate: '2025-04-10', value: 1440000 },
-        { name: 'Frozen Vegetables', quantity: 100, expiryDate: '2025-07-01', value: 600000 }
+        {
+          sku: 'SEA-007', name: 'Frozen Prawns', category: 'seafood', brand: 'SeaKing', supplier: 'Coastal Exports Ltd',
+          batchNumber: 'B-2025-001', lotNumber: 'LOT-CE-0101', unitType: 'box', quantity: 300,
+          shelfLifeDays: 180, entryDate: '2025-01-02', expiryDate: '2025-06-15',
+          storageMinTemp: -25, storageMaxTemp: -18, humidityMin: 40, humidityMax: 60,
+          barcode: '8901234560073', value: 2400000,
+        },
+        {
+          sku: 'FMT-008', name: 'Frozen Buffalo Meat', category: 'meat', brand: 'FrostPack', supplier: 'Allied Frozen Foods',
+          batchNumber: 'B-2025-003', lotNumber: 'LOT-AF-0103', unitType: 'pallet', quantity: 280,
+          shelfLifeDays: 150, entryDate: '2024-12-22', expiryDate: '2025-05-20',
+          storageMinTemp: -25, storageMaxTemp: -18, humidityMin: 40, humidityMax: 60,
+          barcode: '8901234560080', value: 1960000,
+        },
+        {
+          sku: 'ICE-009', name: 'Ice Cream Assorted', category: 'frozen-foods', brand: 'Kwality Walls', supplier: 'HUL Frozen Division',
+          batchNumber: 'B-2025-005', lotNumber: 'LOT-HU-0105', unitType: 'box', quantity: 180,
+          shelfLifeDays: 90, entryDate: '2025-01-10', expiryDate: '2025-04-10',
+          storageMinTemp: -25, storageMaxTemp: -18, humidityMin: 40, humidityMax: 55,
+          barcode: '8901030860099', value: 1440000,
+        },
+        {
+          sku: 'FVG-010', name: 'Frozen Mixed Vegetables', category: 'frozen-foods', brand: 'McCain', supplier: 'McCain Foods India',
+          batchNumber: 'B-2025-006', lotNumber: 'LOT-MC-0106', unitType: 'box', quantity: 100,
+          shelfLifeDays: 180, entryDate: '2025-01-08', expiryDate: '2025-07-01',
+          storageMinTemp: -22, storageMaxTemp: -18, humidityMin: 40, humidityMax: 55,
+          barcode: '8904098760010', value: 600000,
+        },
       ],
       alerts: [
         {
@@ -375,6 +449,19 @@ export const networkMetrics = {
     { region: 'West', current: 6500, projected: 6800, recommendation: 'maintain' },
     { region: 'North', current: 9200, projected: 10500, recommendation: 'expand' }
   ]
+};
+
+export const outsideConditions = {
+  temperature: 36.2,
+  humidity: 74,
+  dewPoint: 28.5,
+  windSpeed: 14,
+  windDirection: 'SW',
+  heatIndex: 42,
+  uvIndex: 8,
+  pressure: 1008,
+  visibility: 9.2,
+  updatedAt: 'Just now',
 };
 
 // Safety thresholds
