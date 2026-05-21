@@ -111,7 +111,7 @@ export function RevenueDashboard({ facility = chennaiFacility }: RevenueDashboar
                 <XAxis dataKey="day" stroke="var(--muted-foreground)" fontSize={12} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={12} />
                 <Tooltip
-                  formatter={(value: number) => [formatCurrency(value), '']}
+                  formatter={(value) => [formatCurrency(value as number), '']}
                   contentStyle={DARK_TOOLTIP_STYLE}
                 />
                 <Legend />
@@ -144,7 +144,7 @@ export function RevenueDashboard({ facility = chennaiFacility }: RevenueDashboar
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={DARK_TOOLTIP_STYLE} formatter={(v: number) => formatCurrency(v)} />
+                  <Tooltip contentStyle={DARK_TOOLTIP_STYLE} formatter={(v) => formatCurrency(v as number)} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="flex-1 space-y-3 ml-6">

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Map,
   MapMarker,
@@ -65,18 +64,7 @@ export function FacilityMap({
               />
             </MarkerContent>
 
-            <MarkerPopup
-              offset={{
-                top: [0, 0],
-                'top-left': [0, 0],
-                'top-right': [0, 0],
-                bottom: [0, -10],
-                'bottom-left': [0, -10],
-                'bottom-right': [0, -10],
-                left: [10, 0],
-                right: [-10, 0]
-              }}
-            >
+            <MarkerPopup>
               <div className="bg-white rounded-lg p-3 shadow-lg border border-gray-200 min-w-[200px]">
                 <div className="flex items-start justify-between mb-2">
                   <div>
@@ -110,16 +98,16 @@ export function FacilityMap({
                   </div>
                   <div>
                     <span className="text-gray-500">Energy:</span>{' '}
-                    <span className="font-medium">{facility.energyConsumption} kWh</span>
+                    <span className="font-medium">{facility.energy.today} kWh</span>
                   </div>
                   <div>
                     <span className="text-gray-500">Alerts:</span>{' '}
                     <span
                       className={`font-medium ${
-                        facility.alerts > 0 ? 'text-red-600' : 'text-green-600'
+                        facility.zones.reduce((s, z) => s + z.alerts.length, 0) > 0 ? 'text-red-600' : 'text-green-600'
                       }`}
                     >
-                      {facility.alerts}
+                      {facility.zones.reduce((s, z) => s + z.alerts.length, 0)}
                     </span>
                   </div>
                 </div>

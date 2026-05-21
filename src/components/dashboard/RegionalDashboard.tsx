@@ -37,12 +37,14 @@ export function RegionalDashboard() {
 
   const kpiItems: KpiGridItem[] = [
     {
+      id: 'total-capacity',
       label: 'Total Capacity',
       value: `${totalCapacity.toLocaleString()} T`,
       icon: <Database className="h-5 w-5" />,
       sublabel: `${regionalFacilities.length} facilities`,
     },
     {
+      id: 'avg-occupancy',
       label: 'Avg Occupancy',
       value: `${avgOccupancy.toFixed(1)}%`,
       icon: <Activity className="h-5 w-5" />,
@@ -51,6 +53,7 @@ export function RegionalDashboard() {
       sublabel: 'from last week',
     },
     {
+      id: 'today-revenue',
       label: "Today's Revenue",
       value: fmt(totalRevenue),
       icon: <TrendingUp className="h-5 w-5" />,
@@ -59,6 +62,7 @@ export function RegionalDashboard() {
       sublabel: 'from yesterday',
     },
     {
+      id: 'energy-cost',
       label: 'Energy Cost',
       value: fmt(totalEnergy * 7),
       icon: <Zap className="h-5 w-5" />,
@@ -79,7 +83,7 @@ export function RegionalDashboard() {
   return (
     <div className="space-y-6">
 
-      <KpiGrid items={kpiItems} columns={4} />
+      <KpiGrid items={kpiItems} cols={4} />
 
       {totalCritical > 0 && (
         <div className="bg-destructive/10 border border-destructive/30 rounded-xl px-5 py-3.5 flex items-center gap-3">

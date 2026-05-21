@@ -7,16 +7,7 @@
 
 type ZoneType = 'ambient' | 'chill' | 'frozen' | 'processing';
 type AlertSeverity = 'critical' | 'warning' | 'info';
-type AlertStatus = 'open' | 'in_progress' | 'resolved' | 'escalated';
 type DoorStatus = 'open' | 'closed' | 'fault';
-
-interface ZoneReading {
-  timestamp: string;
-  temperature: number;
-  humidity: number;
-  nh3Level?: number; // Ammonia in ppm
-  co2Level?: number; // CO2 in ppm
-}
 
 interface Zone {
   id: string;
@@ -82,7 +73,7 @@ interface Zone {
   }[];
 }
 
-interface Facility {
+export interface Facility {
   id: string;
   name: string;
   location: string;
@@ -464,14 +455,35 @@ export const outsideConditions = {
   updatedAt: 'Just now',
 };
 
-// Safety thresholds
 export const safetyThresholds = {
   nh3: {
     warning: 15, // ppm
     critical: 25 // ppm
   },
   co2: {
-    warning: 3000, // ppm
-    critical: 5000 // ppm
+    warning: 3000,
+    critical: 5000
   }
+};
+
+export const operationalMetrics = {
+  energyCostPerTonne: 1850,
+  fillRate: 86,
+  orderFulfillmentTime: 2.4,
+  spoilageThisMonth: 1.2,
+  doorOpenMinutes: 14,
+  compressorRunTime: 91,
+};
+
+export const batchAgingData = [
+  { id: 'B-001', product: 'Mangoes', quantity: 12, daysStored: 18, maxDays: 21, zone: 'Chill Zone', risk: 'high' },
+  { id: 'B-002', product: 'Apples', quantity: 30, daysStored: 45, maxDays: 90, zone: 'Chill Zone', risk: 'low' },
+  { id: 'B-003', product: 'Fish', quantity: 8, daysStored: 10, maxDays: 14, zone: 'Frozen Zone', risk: 'medium' },
+];
+
+export const energyMetrics = {
+  costTrend: [7200, 7800, 7100, 8200, 7600, 7315],
+  carbonFootprint: 0.42,
+  peakVsOffPeak: { peak: 9.2, offPeak: 5.4 },
+  equipmentEfficiency: 91,
 };

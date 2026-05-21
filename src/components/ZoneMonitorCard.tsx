@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { LineChart } from '@vrushabh-b/oneiot-ui';
 import {
   Thermometer,
-  Droplets,
   Wind,
   Gauge,
   DoorOpen,

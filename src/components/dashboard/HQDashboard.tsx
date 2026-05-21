@@ -41,12 +41,14 @@ export function HQDashboard() {
 
   const kpiItems: KpiGridItem[] = [
     {
+      id: 'total-capacity',
       label: 'Total Capacity',
       value: `${networkMetrics.totalCapacity.toLocaleString()} T`,
       icon: <Database className="h-5 w-5" />,
       sublabel: `${networkMetrics.totalFacilities} facilities`,
     },
     {
+      id: 'avg-occupancy',
       label: 'Avg Occupancy',
       value: `${networkMetrics.avgOccupancy}%`,
       icon: <Users className="h-5 w-5" />,
@@ -55,6 +57,7 @@ export function HQDashboard() {
       sublabel: 'Across all facilities',
     },
     {
+      id: 'daily-energy',
       label: 'Daily Energy Cost',
       value: formatCurrency(totalEnergy * 7),
       icon: <Zap className="h-5 w-5" />,
@@ -63,6 +66,7 @@ export function HQDashboard() {
       sublabel: 'from last month',
     },
     {
+      id: 'monthly-revenue',
       label: 'Monthly Revenue',
       value: formatCurrency(networkMetrics.totalRevenueMonth),
       icon: <TrendUp className="h-5 w-5" />,
@@ -76,7 +80,7 @@ export function HQDashboard() {
     <div className="space-y-6">
 
       {/* ── 1. KPI ROW ── */}
-      <KpiGrid items={kpiItems} columns={4} />
+      <KpiGrid items={kpiItems} cols={4} />
 
       {/* ── 2. NETWORK HEALTH STRIP ── */}
       <div className="grid grid-cols-3 gap-4">

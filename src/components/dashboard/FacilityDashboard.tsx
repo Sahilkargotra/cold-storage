@@ -1,7 +1,6 @@
 import {
   StatCard,
   MetricGauge,
-  StatTrend,
   BarChart,
   AreaChart,
   ProgressRing,

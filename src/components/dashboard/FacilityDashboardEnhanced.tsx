@@ -2,14 +2,13 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Thermometer, DoorOpen, Cpu, Package, Clock, FileText, Zap, Leaf, Download, AlertCircle, History } from 'lucide-react';
 import { useWorkflow } from '@/contexts/WorkflowContext';
 import { AlertDetailModal } from '@/components/AlertDetailModal';
 import { ActionHistory } from '@/components/ActionHistory';
-import { operationalMetrics, batchAgingData, energyMetrics } from '@/data/mockData';
+import { operationalMetrics, energyMetrics } from '@/data/mockData';
 
-// Inline types to avoid import issues
 type AlertSeverity = 'critical' | 'warning' | 'info';
 type AlertStatus = 'open' | 'in_progress' | 'resolved' | 'escalated';
 type EscalationTarget = 'regional' | 'hq';
@@ -314,7 +313,7 @@ export function FacilityDashboardEnhanced() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={energyMetrics.costTrend.map((cost, index) => ({
+              <LineChart data={energyMetrics.costTrend.map((cost: number, index: number) => ({
                 month: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb'][index],
                 cost: cost,
               }))}>

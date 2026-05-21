@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Map,
   MapMarker,
@@ -33,27 +32,12 @@ export function FacilitiesMap({
     }).format(value);
   };
 
-  // Calculate metrics for network view
-  const totalAlerts = facilities.reduce((sum, f) =>
-    sum + f.zones.reduce((zSum, z) => zSum + z.alerts.length, 0), 0
+  const totalAlerts = facilities.reduce((sum: number, f) =>
+    sum + f.zones.reduce((zSum: number, z) => zSum + z.alerts.length, 0), 0
   );
 
   const criticalFacilities = facilities.filter(f => f.status === 'critical').length;
-  const avgOccupancy = facilities.reduce((sum, f) => sum + f.occupancy, 0) / facilities.length;
-
-  // Get status color
-  const getStatusColor = (status: Facility['status']) => {
-    switch (status) {
-      case 'operational':
-        return 'bg-green-500';
-      case 'maintenance':
-        return 'bg-yellow-500';
-      case 'critical':
-        return 'bg-red-500';
-      default:
-        return 'bg-gray-500';
-    }
-  };
+  const avgOccupancy = facilities.reduce((sum: number, f) => sum + f.occupancy, 0) / facilities.length;
 
   return (
     <div className="w-full">
@@ -82,12 +66,12 @@ export function FacilitiesMap({
 
           {facilities.map((facility) => {
             const facilityAlerts = facility.zones.reduce(
-              (acc, zone) => acc + zone.alerts.length,
+              (acc: number, zone) => acc + zone.alerts.length,
               0
             );
             const facilityCritical = facility.zones.reduce(
-              (acc, zone) =>
-                acc + zone.alerts.filter(a => a.severity === 'critical').length,
+              (acc: number, zone) =>
+                acc + zone.alerts.filter((a) => a.severity === 'critical').length,
               0
             );
 

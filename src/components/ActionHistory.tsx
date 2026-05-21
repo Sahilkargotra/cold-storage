@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
-import { CheckCircle, XCircle, Clock, TrendingUp, FileText, Wrench } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, FileText, Wrench } from 'lucide-react';
 
 // Inline types to avoid import issues
 type ActionStatus = 'completed' | 'pending' | 'failed';
