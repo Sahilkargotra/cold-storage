@@ -1,4 +1,4 @@
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@vrushabh-b/oneiot-ui';
 import {
   SheetTrigger,
   SheetContent,

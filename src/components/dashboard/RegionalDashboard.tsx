@@ -1,19 +1,37 @@
-import { KpiGrid, BarChart, ProgressRing, StatCard } from '@vrushabh-b/oneiot-ui';
+import { useState } from 'react';
+import { KpiGrid, BarChart, ProgressRing, StatCard, FormSheet } from '@vrushabh-b/oneiot-ui';
 import type { KpiGridItem } from '@vrushabh-b/oneiot-ui';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge, Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@vrushabh-b/oneiot-ui';
 import {
   AlertTriangle, CheckCircle2, Zap, Database, TrendingUp, Activity,
-  MapPin, ArrowUpRight, ArrowDownRight, Thermometer, DoorOpen, IndianRupee,
+  MapPin, ArrowUpRight, ArrowDownRight, Thermometer, DoorOpen, IndianRupee, Plus, Building2,
 } from 'lucide-react';
 import { regionalFacilities } from '@/data/mockData';
 import { FacilitiesMap } from '@/components/map/FacilitiesMap';
+import { useSetup } from '@/contexts/SetupContext';
+import type { FacilitySetup } from '@/contexts/SetupContext';
 
 const TEAL = '#02A19E';
 const PURPLE = '#6333ff';
 const AMBER = '#f59e0b';
 
+const FIELD = 'w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#02A19E]';
+
+const emptyFacility = (): Omit<FacilitySetup, 'id' | 'createdAt'> => ({
+  regionId: '', name: '', location: '', address: '', latitude: '', longitude: '',
+  totalCapacity: '', licenseNumber: '', fssaiLicense: '', managerName: '', managerEmail: '', managerMobile: '',
+});
+
 export function RegionalDashboard() {
+  const { regions, facilities, addFacility } = useSetup();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [form, setForm] = useState(emptyFacility());
+  const [saved, setSaved] = useState(false);
+
+  const upd = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+  const handleSave = () => { addFacility(form); setSaved(true); };
+  const handleClose = () => { setSheetOpen(false); setSaved(false); setForm(emptyFacility()); };
   const fmt = (v: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
 
@@ -82,6 +100,119 @@ export function RegionalDashboard() {
 
   return (
     <div className="space-y-6">
+
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">{facilities.length} custom facilit{facilities.length !== 1 ? 'ies' : 'y'} configured</p>
+        </div>
+        <Button className="bg-[#02A19E] text-white hover:bg-[#02A19E]/90" onClick={() => setSheetOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Facility
+        </Button>
+      </div>
+
+      <FormSheet
+        open={sheetOpen}
+        onClose={handleClose}
+        title={<span className="flex items-center gap-2"><Building2 className="h-4 w-4" /> Create Facility</span>}
+        description="Register a new cold storage facility under a region."
+        footer={!saved ? (
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={handleClose}>Cancel</Button>
+            <Button className="bg-[#02A19E] text-white hover:bg-[#02A19E]/90" onClick={handleSave} disabled={!form.name}>Save Facility</Button>
+          </div>
+        ) : undefined}
+      >
+        {saved ? (
+          <div className="flex flex-col items-center gap-4 py-12">
+            <CheckCircle2 className="h-12 w-12 text-green-500" />
+            <p className="text-lg font-semibold text-foreground">Facility Created</p>
+            <Badge className="bg-green-500/15 text-green-400 border-green-500/30">{form.name}</Badge>
+            <Button variant="outline" className="mt-4" onClick={handleClose}>Close</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Parent Region</label>
+              <select className={FIELD} value={form.regionId} onChange={e => upd('regionId', e.target.value)}>
+                <option value="">Select region</option>
+                {regions.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                <option value="mock-south">South India (Mock)</option>
+                <option value="mock-north">North India (Mock)</option>
+                <option value="mock-west">West India (Mock)</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Facility Name</label>
+              <input className={FIELD} placeholder="e.g. Mysore Cold Storage" value={form.name} onChange={e => upd('name', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">City, State</label>
+              <input className={FIELD} placeholder="e.g. Mysore, Karnataka" value={form.location} onChange={e => upd('location', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Full Address</label>
+              <textarea rows={2} className={FIELD} placeholder="Street address" value={form.address} onChange={e => upd('address', e.target.value)} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Latitude</label>
+                <input type="number" className={FIELD} placeholder="e.g. 12.31" value={form.latitude} onChange={e => upd('latitude', e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Longitude</label>
+                <input type="number" className={FIELD} placeholder="e.g. 76.65" value={form.longitude} onChange={e => upd('longitude', e.target.value)} />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Total Capacity (tonnes)</label>
+              <input type="number" min="0" className={FIELD} placeholder="e.g. 2000" value={form.totalCapacity} onChange={e => upd('totalCapacity', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Trade License Number</label>
+              <input className={FIELD} placeholder="State trade license" value={form.licenseNumber} onChange={e => upd('licenseNumber', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">FSSAI License Number</label>
+              <input className={FIELD} placeholder="14-digit FSSAI" value={form.fssaiLicense} onChange={e => upd('fssaiLicense', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Facility Manager Name</label>
+              <input className={FIELD} placeholder="Full name" value={form.managerName} onChange={e => upd('managerName', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Manager Email</label>
+              <input type="email" className={FIELD} placeholder="email@company.in" value={form.managerEmail} onChange={e => upd('managerEmail', e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Manager Mobile</label>
+              <input type="tel" className={FIELD} placeholder="10-digit mobile" value={form.managerMobile} onChange={e => upd('managerMobile', e.target.value)} />
+            </div>
+          </div>
+        )}
+      </FormSheet>
+
+      {facilities.length > 0 && (
+        <div className="bg-card rounded-xl border border-border">
+          <div className="px-5 py-3 border-b border-border">
+            <h3 className="text-sm font-semibold text-foreground">Configured Facilities</h3>
+          </div>
+          <div className="divide-y divide-border">
+            {facilities.map(f => (
+              <div key={f.id} className="px-5 py-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{f.name}</p>
+                  <p className="text-xs text-muted-foreground">{f.location}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-foreground">{f.totalCapacity ? `${f.totalCapacity} T` : '—'}</p>
+                  <p className="text-xs text-muted-foreground">{f.managerName || '—'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <KpiGrid items={kpiItems} cols={4} />
 

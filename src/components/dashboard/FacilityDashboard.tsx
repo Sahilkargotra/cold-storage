@@ -1,14 +1,13 @@
+import { useState } from 'react';
 import {
   StatCard,
-  MetricGauge,
   BarChart,
   AreaChart,
   ProgressRing,
-  CounterCard,
+  FormSheet,
 } from '@vrushabh-b/oneiot-ui';
 import type { AlertFeedItem } from '@vrushabh-b/oneiot-ui';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, CardAction, Badge, Button } from '@vrushabh-b/oneiot-ui';
 import {
   Thermometer,
   Droplets,
@@ -23,14 +22,36 @@ import {
   TrendingDown,
   Sun,
   IndianRupee,
+  Plus,
+  CheckCircle2,
+  Layers,
 } from 'lucide-react';
 import { chennaiFacility, energyHistory, outsideConditions } from '@/data/mockData';
+import { useSetup } from '@/contexts/SetupContext';
+import type { ZoneSetup } from '@/contexts/SetupContext';
 
 const TEAL = '#02A19E';
 const PURPLE = '#6333ff';
 const AMBER = '#f59e0b';
 
+const FIELD = 'w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#02A19E]';
+
+const emptyZone = (): Omit<ZoneSetup, 'id' | 'createdAt'> => ({
+  facilityId: 'FAC-001', name: '', type: '', capacity: '',
+  tempMin: '', tempMax: '', tempTarget: '', humidityTarget: '',
+  ratePerTonnePerDay: '', minimumChargeableTonnes: '', billingCycle: '',
+  handlingChargePerEntry: '', coldChainSurcharge: '',
+});
+
 export function FacilityDashboard() {
+  const { zones, addZone } = useSetup();
+  const [zoneSheetOpen, setZoneSheetOpen] = useState(false);
+  const [zoneForm, setZoneForm] = useState(emptyZone());
+  const [zoneSaved, setZoneSaved] = useState(false);
+
+  const updZone = (k: keyof typeof zoneForm, v: string) => setZoneForm(p => ({ ...p, [k]: v }));
+  const handleZoneSave = () => { addZone(zoneForm); setZoneSaved(true); };
+  const handleZoneClose = () => { setZoneSheetOpen(false); setZoneSaved(false); setZoneForm(emptyZone()); };
   const facility = chennaiFacility;
 
   const fmt = (v: number) =>
@@ -189,46 +210,143 @@ export function FacilityDashboard() {
         />
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <CounterCard
-          label="Total Capacity"
-          value={facility.totalCapacity}
-          unit="T"
-          icon={Package}
-          iconColor={TEAL}
-          description="Total storage capacity"
-        />
-        <CounterCard
-          label="Energy Today"
-          value={facility.energy.today}
-          unit="kWh"
-          icon={Zap}
-          iconColor={PURPLE}
-          delta={-9}
-          deltaLabel="vs yesterday"
-          description={`₹${facility.energy.costPerTonne}/tonne`}
-        />
-        <CounterCard
-          label="Weekly Revenue"
-          value={Math.round(facility.revenue.thisWeek / 1000)}
-          unit="K"
-          prefix="₹"
-          icon={TrendingDown}
-          iconColor={AMBER}
-          delta={5}
-          deltaLabel="vs last week"
-        />
-        <CounterCard
-          label="Zones Active"
-          value={facility.zones.length}
-          icon={Activity}
-          iconColor="#ec4899"
-          description={`${openDoors.length} door${openDoors.length !== 1 ? 's' : ''} open`}
-        />
-      </div>
-
       <div>
-        <h2 className="text-base font-semibold text-foreground mb-3">Zone Monitoring</h2>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-semibold text-foreground">Zone Monitoring</h2>
+            {openDoors.length > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-yellow-500/10 border border-yellow-500/30 px-2 py-0.5 text-xs font-medium text-yellow-400">
+                <DoorOpen className="h-3 w-3" />
+                {openDoors.length} door{openDoors.length !== 1 ? 's' : ''} open
+              </span>
+            )}
+          </div>
+          <Button size="sm" className="bg-[#02A19E] text-white hover:bg-[#02A19E]/90" onClick={() => setZoneSheetOpen(true)}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" />
+            Add Zone
+          </Button>
+        </div>
+
+        <FormSheet
+          open={zoneSheetOpen}
+          onClose={handleZoneClose}
+          title={<span className="flex items-center gap-2"><Layers className="h-4 w-4" /> Create Zone</span>}
+          description="Add a temperature-controlled zone to this facility."
+          footer={!zoneSaved ? (
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={handleZoneClose}>Cancel</Button>
+              <Button className="bg-[#02A19E] text-white hover:bg-[#02A19E]/90" onClick={handleZoneSave} disabled={!zoneForm.name || !zoneForm.type}>Save Zone</Button>
+            </div>
+          ) : undefined}
+        >
+          {zoneSaved ? (
+            <div className="flex flex-col items-center gap-4 py-12">
+              <CheckCircle2 className="h-12 w-12 text-green-500" />
+              <p className="text-lg font-semibold text-foreground">Zone Created</p>
+              <Badge className="bg-green-500/15 text-green-400 border-green-500/30">{zoneForm.name}</Badge>
+              <Button variant="outline" className="mt-4" onClick={handleZoneClose}>Close</Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Zone Name</label>
+                <input className={FIELD} placeholder="e.g. Chill Zone A" value={zoneForm.name} onChange={e => updZone('name', e.target.value)} />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Zone Type</label>
+                <select className={FIELD} value={zoneForm.type} onChange={e => updZone('type', e.target.value)}>
+                  <option value="">Select type</option>
+                  <option value="ambient">Ambient (10–25°C)</option>
+                  <option value="chill">Chill (0–8°C)</option>
+                  <option value="frozen">Frozen (−25 to −18°C)</option>
+                  <option value="processing">Processing</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Capacity (tonnes)</label>
+                <input type="number" min="0" className={FIELD} placeholder="e.g. 500" value={zoneForm.capacity} onChange={e => updZone('capacity', e.target.value)} />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Temp Min (°C)</label>
+                  <input type="number" className={FIELD} placeholder="-25" value={zoneForm.tempMin} onChange={e => updZone('tempMin', e.target.value)} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Temp Max (°C)</label>
+                  <input type="number" className={FIELD} placeholder="8" value={zoneForm.tempMax} onChange={e => updZone('tempMax', e.target.value)} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Target (°C)</label>
+                  <input type="number" className={FIELD} placeholder="4" value={zoneForm.tempTarget} onChange={e => updZone('tempTarget', e.target.value)} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Humidity Target (%)</label>
+                <input type="number" min="0" max="100" className={FIELD} placeholder="e.g. 85" value={zoneForm.humidityTarget} onChange={e => updZone('humidityTarget', e.target.value)} />
+              </div>
+
+              <div className="border-t border-border pt-4 mt-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Pricing</p>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Rate / Tonne / Day (₹)</label>
+                      <input type="number" min="0" className={FIELD} placeholder="e.g. 12" value={zoneForm.ratePerTonnePerDay} onChange={e => updZone('ratePerTonnePerDay', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Min Chargeable (tonnes)</label>
+                      <input type="number" min="0" className={FIELD} placeholder="e.g. 10" value={zoneForm.minimumChargeableTonnes} onChange={e => updZone('minimumChargeableTonnes', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Handling Charge / Entry (₹)</label>
+                      <input type="number" min="0" className={FIELD} placeholder="e.g. 500" value={zoneForm.handlingChargePerEntry} onChange={e => updZone('handlingChargePerEntry', e.target.value)} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Cold Chain Surcharge (%)</label>
+                      <input type="number" min="0" max="100" className={FIELD} placeholder="e.g. 5" value={zoneForm.coldChainSurcharge} onChange={e => updZone('coldChainSurcharge', e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Billing Cycle</label>
+                    <select className={FIELD} value={zoneForm.billingCycle} onChange={e => updZone('billingCycle', e.target.value)}>
+                      <option value="">Select cycle</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="fortnightly">Fortnightly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </FormSheet>
+
+        {zones.length > 0 && (
+          <div className="bg-card rounded-xl border border-border mb-4">
+            <div className="px-4 py-2.5 border-b border-border">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Configured Zones ({zones.length})</h3>
+            </div>
+            <div className="divide-y divide-border">
+              {zones.map(z => (
+                <div key={z.id} className="px-4 py-2.5 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{z.name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">{z.type} · {z.capacity ? `${z.capacity} T` : '—'}</p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground space-y-0.5">
+                    <p>{z.tempTarget ? `${z.tempTarget}°C target` : '—'}</p>
+                    {z.ratePerTonnePerDay && (
+                      <p className="text-[#02A19E] font-medium">₹{z.ratePerTonnePerDay}/T/day</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {facility.zones.map(zone => {
             const tempOk = zone.temperature.current >= zone.temperature.min && zone.temperature.current <= zone.temperature.max;
@@ -238,49 +356,52 @@ export function FacilityDashboard() {
             const co2Warn = zone.safety.co2Level > 600;
             const openDoorCount = zone.doors.filter(d => d.status === 'open').length;
             const topAlert = zone.alerts.sort((a, b) => (a.severity === 'critical' ? -1 : b.severity === 'critical' ? 1 : 0))[0];
-            const typeBadgeClass =
-              zone.type === 'frozen'  ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
-              zone.type === 'chill'   ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
-                                        'bg-teal-500/10 text-teal-400 border-teal-500/30';
             const tempColor = tempStatus === 'critical' ? 'text-destructive' : tempStatus === 'warning' ? 'text-yellow-400' : 'text-green-400';
             const tempBg = tempStatus === 'critical' ? 'bg-destructive/10 border-destructive/30' : tempStatus === 'warning' ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-green-500/10 border-green-500/30';
 
+            const typeBadgeVariant =
+              zone.type === 'frozen' ? 'secondary' :
+              zone.type === 'chill'  ? 'info' : 'success';
+
             return (
-              <div key={zone.id} className="bg-card rounded-xl border border-border overflow-hidden flex flex-col">
-                <div className="px-4 pt-4 pb-3 flex items-start justify-between gap-2">
+              <Card key={zone.id} className="flex flex-col overflow-hidden">
+                <CardHeader>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground truncate">{zone.name}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border capitalize ${typeBadgeClass}`}>
-                        {zone.type}
-                      </span>
+                    <CardTitle className="text-sm truncate">{zone.name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <Badge variant={typeBadgeVariant} className="capitalize text-[10px]">{zone.type}</Badge>
                       {openDoorCount > 0 && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500/10 border border-yellow-500/30 text-yellow-400">
+                        <Badge variant="warning" className="text-[10px] flex items-center gap-1">
                           <DoorOpen className="h-2.5 w-2.5" />
                           {openDoorCount} open
-                        </span>
+                        </Badge>
                       )}
                       {zone.alerts.length > 0 && (
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${zone.alerts.some(a => a.severity === 'critical') ? 'bg-destructive/10 border-destructive/30 text-destructive' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'}`}>
+                        <Badge
+                          variant={zone.alerts.some(a => a.severity === 'critical') ? 'destructive' : 'warning'}
+                          className="text-[10px] flex items-center gap-1"
+                        >
                           <AlertTriangle className="h-2.5 w-2.5" />
                           {zone.alerts.length}
-                        </span>
+                        </Badge>
                       )}
                     </div>
                   </div>
-                  <div className="flex-shrink-0 text-right">
-                    <p className="text-[10px] text-muted-foreground mb-1">{zone.capacity} T cap</p>
-                    <ProgressRing
-                      value={zone.occupancy}
-                      size={40}
-                      strokeWidth={4}
-                      color={zone.occupancy > 90 ? AMBER : TEAL}
-                      showValue
-                    />
-                  </div>
-                </div>
+                  <CardAction>
+                    <div className="flex flex-col items-end gap-1">
+                      <p className="text-[10px] text-muted-foreground">{zone.capacity} T cap</p>
+                      <ProgressRing
+                        value={zone.occupancy}
+                        size={40}
+                        strokeWidth={4}
+                        color={zone.occupancy > 90 ? AMBER : TEAL}
+                        showValue
+                      />
+                    </div>
+                  </CardAction>
+                </CardHeader>
 
-                <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+                <CardContent className="grid grid-cols-2 gap-2 pb-3">
                   <div className={`rounded-lg border px-3 py-2.5 ${tempBg}`}>
                     <div className="flex items-center gap-1.5 mb-1">
                       <Thermometer className={`h-3.5 w-3.5 ${tempColor}`} />
@@ -297,25 +418,9 @@ export function FacilityDashboard() {
                     <p className={`text-xl font-bold leading-none ${humOk ? 'text-blue-400' : 'text-yellow-400'}`}>{zone.humidity.current}%</p>
                     <p className="text-[10px] text-muted-foreground mt-1">Target {zone.humidity.target}% · {zone.humidity.min}–{zone.humidity.max}%</p>
                   </div>
-                </div>
+                </CardContent>
 
-                {/* <div className="px-4 pb-3">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide flex items-center gap-1">
-                      <Package className="h-3 w-3" />
-                      Occupancy
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{zone.currentOccupancy} / {zone.capacity} T</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${zone.occupancy > 90 ? 'bg-yellow-400' : 'bg-teal-400'}`}
-                      style={{ width: `${zone.occupancy}%` }}
-                    />
-                  </div>
-                </div> */}
-
-                <div className="px-4 pb-3 grid grid-cols-4 gap-2">
+                <CardContent className="grid grid-cols-4 gap-2 pt-0 pb-3">
                   {[
                     { icon: Wind, label: 'NH₃', value: zone.safety.nh3Level, unit: 'ppm', warn: nh3Warn },
                     { icon: Activity, label: 'CO₂', value: zone.safety.co2Level, unit: 'ppm', warn: co2Warn },
@@ -324,26 +429,28 @@ export function FacilityDashboard() {
                   ].map(({ icon: Icon, label, value, unit, warn }) => (
                     <div key={label} className="flex flex-col items-center gap-1 rounded-lg bg-muted/50 py-2 px-1">
                       <Icon className={`h-3.5 w-3.5 ${warn ? 'text-yellow-400' : 'text-muted-foreground'}`} />
-                      <p className={`text-xs font-bold leading-none ${warn ? 'text-yellow-400' : 'text-foreground'}`}>{value}<span className="text-[9px] font-normal text-muted-foreground ml-0.5">{unit}</span></p>
+                      <p className={`text-xs font-bold leading-none ${warn ? 'text-yellow-400' : 'text-foreground'}`}>
+                        {value}<span className="text-[9px] font-normal text-muted-foreground ml-0.5">{unit}</span>
+                      </p>
                       <p className="text-[9px] text-muted-foreground leading-none">{label}</p>
                     </div>
                   ))}
-                </div>
+                </CardContent>
 
-                <div className="mt-auto">
+                <CardFooter className={`mt-auto border-t px-4 py-2.5 flex items-start gap-2 text-xs ${topAlert ? (topAlert.severity === 'critical' ? 'bg-destructive/10 border-destructive/30 text-destructive' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400') : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
                   {topAlert ? (
-                    <div className={`px-4 py-2.5 flex items-start gap-2 text-xs border-t ${topAlert.severity === 'critical' ? 'bg-destructive/10 border-destructive/30 text-destructive' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'}`}>
+                    <>
                       <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
                       <span className="line-clamp-2 leading-snug">{topAlert.message}</span>
-                    </div>
+                    </>
                   ) : (
-                    <div className="px-4 py-2.5 flex items-center gap-2 text-xs bg-green-500/10 border-t border-green-500/30 text-green-400">
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-400 flex-shrink-0" />
+                    <>
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-400 flex-shrink-0 mt-1" />
                       All systems normal
-                    </div>
+                    </>
                   )}
-                </div>
-              </div>
+                </CardFooter>
+              </Card>
             );
           })}
         </div>
@@ -393,6 +500,21 @@ export function FacilityDashboard() {
               config={{ consumption: { label: 'Consumption (kWh)', color: TEAL } }}
               className="h-56"
             />
+            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Today</span>
+                <span className="text-sm font-bold text-foreground">{facility.energy.today.toLocaleString()} kWh</span>
+                <span className={`text-xs font-medium flex items-center gap-1 ${facility.energy.today < facility.energy.yesterday ? 'text-green-400' : 'text-destructive'}`}>
+                  <TrendingDown className="h-3 w-3" />
+                  {facility.energy.yesterday.toLocaleString()} kWh yesterday
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">This Week</span>
+                <span className="text-sm font-bold text-foreground">{facility.energy.thisWeek.toLocaleString()} kWh</span>
+                <span className="text-xs text-muted-foreground">Efficiency: {(facility.energy.today / facility.totalCapacity).toFixed(2)} kWh/T</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -410,89 +532,18 @@ export function FacilityDashboard() {
               gradient
               className="h-56"
             />
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Zone Capacity</CardTitle>
-            <CardDescription>Occupancy across all zones</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-around py-2">
-              {facility.zones.map(zone => (
-                <MetricGauge
-                  key={zone.id}
-                  value={zone.occupancy}
-                  min={0}
-                  max={100}
-                  unit="%"
-                  label={zone.name.split(' ').slice(0, 2).join(' ')}
-                  thresholds={{ warning: 80, danger: 95 }}
-                  size={110}
-                />
-              ))}
-            </div>
-            {openDoors.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                  <DoorOpen className="h-3.5 w-3.5" />
-                  Open doors ({openDoors.length})
-                </p>
-                {openDoors.map(door => (
-                  <div key={door.id} className="flex items-center justify-between px-3 py-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-sm">
-                    <span className="font-medium text-foreground">{door.name}</span>
-                    <span className="text-yellow-400 text-xs">{door.zoneName} · {door.openDuration} min open</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Energy Performance</CardTitle>
-            <CardDescription>Cost efficiency metrics</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-border">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Zap className="h-4 w-4" />
-                  Today vs Yesterday
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-foreground">{facility.energy.today.toLocaleString()} kWh</p>
-                  <p className={`text-xs font-medium flex items-center gap-1 justify-end ${facility.energy.today < facility.energy.yesterday ? 'text-green-400' : 'text-destructive'}`}>
-                    <TrendingDown className="h-3 w-3" />
-                    {facility.energy.yesterday.toLocaleString()} kWh yesterday
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-muted-foreground">Cost per Tonne</span>
+            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Cost / Tonne</span>
                 <span className={`text-sm font-bold ${facility.energy.costPerTonne < 2000 ? 'text-green-400' : 'text-destructive'}`}>
                   ₹{facility.energy.costPerTonne.toLocaleString()}
                 </span>
               </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-muted-foreground">Revenue per Tonne</span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Revenue / Tonne</span>
                 <span className="text-sm font-bold text-foreground">
                   {fmt(facility.revenue.today / (facility.totalCapacity * facility.occupancy / 100))}
                 </span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-muted-foreground">Energy Efficiency</span>
-                <span className="text-sm font-bold text-foreground">
-                  {(facility.energy.today / facility.totalCapacity).toFixed(2)} kWh/T
-                </span>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-muted-foreground">This Week Total</span>
-                <span className="text-sm font-bold text-foreground">{facility.energy.thisWeek.toLocaleString()} kWh</span>
               </div>
             </div>
           </CardContent>

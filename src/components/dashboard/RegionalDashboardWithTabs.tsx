@@ -1,5 +1,4 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@vrushabh-b/oneiot-ui';
 import { BarChart, AreaChart } from '@vrushabh-b/oneiot-ui';
 import { TrendingUp, TrendingDown, IndianRupee, Zap } from 'lucide-react';
 import { RegionalDashboard } from './RegionalDashboard';

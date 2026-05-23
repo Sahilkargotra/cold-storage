@@ -1,7 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge, Button } from '@vrushabh-b/oneiot-ui';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Thermometer, DoorOpen, Cpu, Package, Clock, FileText, Zap, Leaf, Download, AlertCircle, History } from 'lucide-react';
 import { useWorkflow } from '@/contexts/WorkflowContext';

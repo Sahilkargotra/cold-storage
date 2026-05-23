@@ -1,4 +1,4 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@vrushabh-b/oneiot-ui';
 import { HQDashboard } from './HQDashboard';
 import { networkMetrics, regionalFacilities } from '@/data/mockData';
 

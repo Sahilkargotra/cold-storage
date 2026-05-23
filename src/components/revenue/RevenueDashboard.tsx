@@ -1,5 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Button } from '@vrushabh-b/oneiot-ui';
 import { Calendar, Download } from 'lucide-react';
 import {
   BarChart,
@@ -81,10 +80,9 @@ export function RevenueDashboard({ facility = chennaiFacility }: RevenueDashboar
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { label: "Today's Revenue", value: formatCurrency(facility.revenue.today), sub: '+8.2% vs yesterday' },
-          { label: 'Revenue/Tonne', value: formatCurrency(revenuePerTonne), sub: '+3.1% efficiency' },
+          { label: 'Revenue / Tonne', value: formatCurrency(revenuePerTonne), sub: '+3.1% efficiency' },
           { label: 'Net Profit', value: formatCurrency(netProfit), sub: `${profitMargin.toFixed(1)}% margin` },
           { label: 'Monthly Revenue', value: formatCurrency(facility.revenue.thisMonth), sub: 'On Track' },
         ].map((kpi) => (
@@ -235,45 +233,6 @@ export function RevenueDashboard({ facility = chennaiFacility }: RevenueDashboar
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-semibold">Revenue Performance Metrics</CardTitle>
-          <CardDescription>Key performance indicators for financial health</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              {
-                icon: '📦',
-                label: 'Occupancy Rate',
-                value: `${facility.occupancy}%`,
-                sub: `${facility.totalCapacity * facility.occupancy / 100} tonnes utilized`,
-              },
-              {
-                icon: '⚡',
-                label: 'Cost Efficiency',
-                value: `₹${facility.energy.costPerTonne}`,
-                sub: 'per tonne',
-              },
-              {
-                icon: '📊',
-                label: 'Daily Target',
-                value: `${((facility.revenue.today / (facility.revenue.today * 1.1)) * 100).toFixed(0)}%`,
-                sub: 'of daily target achieved',
-              },
-            ].map((m) => (
-              <div key={m.label} className="p-4 border border-border rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm">{m.icon}</span>
-                  <span className="text-sm font-medium text-muted-foreground">{m.label}</span>
-                </div>
-                <div className="text-2xl font-semibold text-foreground">{m.value}</div>
-                <div className="text-xs text-muted-foreground mt-1">{m.sub}</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

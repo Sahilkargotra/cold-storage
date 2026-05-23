@@ -1,4 +1,4 @@
-import type { ComponentProps } from 'react';
+import { useTheme } from '@vrushabh-b/oneiot-ui';
 import {
   Sidebar,
   SidebarContent,
@@ -15,41 +15,102 @@ import {
   SidebarSeparator,
   useSidebar,
 } from '@vrushabh-b/oneiot-ui';
-import {
-  Building2,
-  Map,
-  Network,
-  AlertTriangle,
-  FileText,
-  Settings,
-  Zap,
-  Package,
-  Thermometer,
-  TrendingDown,
-} from 'lucide-react';
-import brandLogo from '@/assets/brandLogoWhite.png';
+import { Sun, Moon, Monitor, Zap, Package, Thermometer, TrendingDown } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import brandLogoWhite from '@/assets/brandLogoWhite.png';
+import brandLogoBlack from '@/assets/brandLogoBlack.png';
 import brandLogoCollapsed from '@/assets/brandLogoCollapsed.png';
 
-type ViewType = 'facility' | 'regional' | 'hq';
-
-interface AppSidebarProps {
-  currentView: ViewType;
-  onViewChange: (view: ViewType) => void;
+export interface NavItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  badge?: string;
 }
 
-const WrappedMenuButton = (props: ComponentProps<typeof SidebarMenuButton>) => (
-  <SidebarMenuButton {...props} />
-);
+interface AppSidebarProps {
+  navItems: NavItem[];
+  currentPath: string;
+  onNavigate: (url: string) => void;
+}
 
 function Logo() {
   const { state } = useSidebar();
+  const { mode } = useTheme();
+  if (state === 'collapsed') {
+    return (
+      <div className="flex h-14 items-center justify-center px-2">
+        <img src={brandLogoCollapsed} alt="OneIoT" className="h-7 w-7 object-contain" />
+      </div>
+    );
+  }
   return (
-    <div className="flex items-center h-14 px-3">
-      {state === 'collapsed' ? (
-        <img src={brandLogoCollapsed} alt="OneIoT" className="h-8 w-8 object-contain mx-auto" />
-      ) : (
-        <img src={brandLogo} alt="OneIoT" className="h-8 object-contain" />
-      )}
+    <div className="flex h-14 items-center px-4">
+      <img
+        src={mode === 'dark' ? brandLogoWhite : brandLogoBlack}
+        alt="OneIoT"
+        className="h-7 object-contain"
+      />
+    </div>
+  );
+}
+
+function ThemeToggle() {
+  const { state } = useSidebar();
+  const { mode, setMode } = useTheme();
+
+  const options: { value: 'light' | 'dark' | 'system'; icon: LucideIcon; label: string }[] = [
+    { value: 'light', icon: Sun, label: 'Light' },
+    { value: 'system', icon: Monitor, label: 'System' },
+    { value: 'dark', icon: Moon, label: 'Dark' },
+  ];
+
+  if (state === 'collapsed') {
+    const CycleIcon = mode === 'dark' ? Moon : mode === 'light' ? Sun : Monitor;
+    return (
+      <div className="flex justify-center py-2">
+        <button
+          onClick={() => {
+            const next = mode === 'dark' ? 'light' : mode === 'light' ? 'system' : 'dark';
+            setMode(next);
+          }}
+          title={`Theme: ${mode}`}
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-sidebar-foreground/50 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-colors"
+        >
+          <CycleIcon className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-3 pb-2">
+      <div
+        role="group"
+        aria-label="Theme mode"
+        className="inline-flex w-full items-center rounded-lg border border-sidebar-border bg-sidebar-accent p-0.5 gap-0.5"
+      >
+        {options.map(({ value, icon: Icon, label }) => {
+          const isActive = mode === value;
+          return (
+            <button
+              key={value}
+              onClick={() => setMode(value)}
+              aria-label={label}
+              aria-pressed={isActive}
+              title={label}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors ${
+                isActive
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-sidebar-foreground/50 hover:text-sidebar-foreground'
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              <span>{label}</span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -59,10 +120,10 @@ function FooterStats() {
   if (state === 'collapsed') {
     return (
       <div className="flex flex-col items-center gap-3 py-3">
-        <div className="flex flex-col items-center gap-1" title="Energy Today: ₹18,450 ↓12%">
+        <div title="Energy Today: ₹18,450 ↓12%">
           <Zap className="h-4 w-4 text-[#02A19E]" />
         </div>
-        <div className="flex flex-col items-center gap-1" title="Avg Occupancy: 86%">
+        <div title="Avg Occupancy: 86%">
           <Package className="h-4 w-4 text-[#6333ff]" />
         </div>
       </div>
@@ -107,42 +168,34 @@ function FooterStats() {
   );
 }
 
-const operationsItems = [
-  { id: 'facility' as const, label: 'Facility Monitor', icon: Building2, description: 'Zone monitoring' },
-  { id: 'regional' as const, label: 'Regional View', icon: Map, description: 'Multi-facility' },
-  { id: 'hq' as const, label: 'HQ Network', icon: Network, description: 'Pan-India view' },
-];
-
-const managementItems = [
-  { id: 'alerts', label: 'Alerts', icon: AlertTriangle, badge: '2' },
-  { id: 'reports', label: 'Reports', icon: FileText, badge: null },
-  { id: 'settings', label: 'Settings', icon: Settings, badge: null },
-] as const;
-
-export function AppSidebar({ currentView, onViewChange }: AppSidebarProps) {
+export function AppSidebar({ navItems, currentPath, onNavigate }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="border-b border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border p-0">
         <Logo />
       </SidebarHeader>
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Operations</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {operationsItems.map((item) => {
+              {navItems.map((item) => {
                 const Icon = item.icon;
+                const isActive = currentPath === item.url;
                 return (
-                  <SidebarMenuItem key={item.id}>
-                    <WrappedMenuButton
-                      isActive={currentView === item.id}
-                      tooltip={item.label}
-                      onClick={() => onViewChange(item.id)}
+                  <SidebarMenuItem key={item.url}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      tooltip={item.title}
+                      onClick={() => onNavigate(item.url)}
                     >
                       <Icon />
-                      <span>{item.label}</span>
-                    </WrappedMenuButton>
+                      <span>{item.title}</span>
+                    </SidebarMenuButton>
+                    {item.badge && (
+                      <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                    )}
                   </SidebarMenuItem>
                 );
               })}
@@ -151,30 +204,11 @@ export function AppSidebar({ currentView, onViewChange }: AppSidebarProps) {
         </SidebarGroup>
 
         <SidebarSeparator />
-
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {managementItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <SidebarMenuItem key={item.id}>
-                    <WrappedMenuButton tooltip={item.label}>
-                      <Icon />
-                      <span>{item.label}</span>
-                    </WrappedMenuButton>
-                    {item.badge && <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>}
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border">
+      <SidebarFooter className="border-t border-sidebar-border p-0">
         <FooterStats />
+        <ThemeToggle />
       </SidebarFooter>
 
       <SidebarRail />
