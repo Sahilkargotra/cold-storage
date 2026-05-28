@@ -10,7 +10,6 @@ import {
 import type { AlertFeedItem } from '@vrushabh-b/oneiot-ui';
 import { Bell } from 'lucide-react';
 import { FacilityDashboard } from './FacilityDashboard';
-import { RevenueDashboard } from '@/components/revenue/RevenueDashboard';
 import { chennaiFacility } from '@/data/mockData';
 
 function buildAlertFeedItems(): AlertFeedItem[] {
@@ -83,7 +82,7 @@ interface FacilityTabBarProps {
 export function FacilityTabBar({ tab, setTab }: FacilityTabBarProps) {
   return (
     <div className="inline-flex items-center rounded-lg border border-border bg-muted p-1 gap-1">
-      {(['operations', 'revenue'] as const).map(t => (
+      {(['operations'] as const).map(t => (
         <button
           key={t}
           onClick={() => setTab(t)}
@@ -93,7 +92,7 @@ export function FacilityTabBar({ tab, setTab }: FacilityTabBarProps) {
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          {t === 'operations' ? 'Operations' : 'Revenue'}
+          Operations
         </button>
       ))}
     </div>
@@ -110,9 +109,6 @@ export function FacilityDashboardWithTabs({ tab, setTab }: FacilityDashboardWith
     <Tabs value={tab} onValueChange={setTab} className="w-full">
       <TabsContent value="operations" className="space-y-6">
         <FacilityDashboard />
-      </TabsContent>
-      <TabsContent value="revenue" className="space-y-6">
-        <RevenueDashboard />
       </TabsContent>
     </Tabs>
   );

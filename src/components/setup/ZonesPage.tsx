@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FormSheet, Badge, Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Separator, ProgressRing } from '@vrushabh-b/oneiot-ui';
 import {
   Layers, Thermometer, Droplets, Zap, Package, AlertTriangle,
-  Plus, ChevronRight, ChevronDown, DoorOpen, Wind, Activity,
+  Plus, ChevronRight, ChevronDown, DoorOpen, Wind, Activity, ExternalLink,
 } from 'lucide-react';
 import { useSetup } from '@/contexts/SetupContext';
 import type { ZoneSetup } from '@/contexts/SetupContext';
@@ -25,7 +25,7 @@ const TYPE_STYLE: Record<string, string> = {
   processing: 'bg-orange-500/10 text-orange-400 border-orange-500/30',
 };
 
-export function ZonesPage() {
+export function ZonesPage({ onSelectZone }: { onSelectZone?: (id: string) => void }) {
   const { zones, addZone } = useSetup();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState(emptyZone());
@@ -243,6 +243,14 @@ export function ZonesPage() {
                           <p className="text-sm font-bold text-foreground">{zone.capacity} T</p>
                           <p className="text-[10px] text-muted-foreground">Capacity</p>
                         </div>
+                        {onSelectZone && (
+                          <button
+                            className="flex items-center gap-1 text-[10px] font-semibold text-[#02A19E] hover:underline flex-shrink-0"
+                            onClick={e => { e.stopPropagation(); onSelectZone(zone.id); }}
+                          >
+                            <ExternalLink className="h-3 w-3" /> Details
+                          </button>
+                        )}
                         {isExpanded
                           ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
                           : <ChevronRight className="h-4 w-4 text-muted-foreground" />}

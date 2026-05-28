@@ -184,6 +184,81 @@ export interface EnergyMetrics {
   equipmentEfficiency: number;
 }
 
+export type ZoneType = 'ambient' | 'chill' | 'frozen' | 'processing';
+export type DoorStatus = 'open' | 'closed' | 'fault';
+
+export interface ZoneDoor {
+  id: string;
+  name: string;
+  status: DoorStatus;
+  openDuration?: number;
+  lastEvent: string;
+}
+
+export interface ZoneProduct {
+  sku: string;
+  name: string;
+  category: 'fruits' | 'vegetables' | 'dairy' | 'meat' | 'poultry' | 'seafood' | 'frozen-foods' | 'pharma' | 'other';
+  brand: string;
+  supplier: string;
+  batchNumber: string;
+  lotNumber: string;
+  unitType: 'kg' | 'tonne' | 'box' | 'pallet' | 'crate';
+  quantity: number;
+  shelfLifeDays: number;
+  entryDate: string;
+  expiryDate: string;
+  storageMinTemp: number;
+  storageMaxTemp: number;
+  humidityMin: number;
+  humidityMax: number;
+  barcode: string;
+  value: number;
+}
+
+export interface ZoneAlert {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  message: string;
+  time: string;
+}
+
+export interface ZoneSafety {
+  nh3Level: number;
+  co2Level: number;
+  lastUpdated: string;
+}
+
+export interface Zone {
+  id: string;
+  name: string;
+  type: ZoneType;
+  capacity: number;
+  currentOccupancy: number;
+  temperature: {
+    current: number;
+    target: number;
+    min: number;
+    max: number;
+    trend: 'up' | 'down' | 'stable';
+  };
+  humidity: {
+    current: number;
+    target: number;
+    min: number;
+    max: number;
+  };
+  safety: ZoneSafety;
+  doors: ZoneDoor[];
+  energy: {
+    consumption: number;
+    cost: number;
+  };
+  occupancy: number;
+  products: ZoneProduct[];
+  alerts: ZoneAlert[];
+}
+
 // Chart Data Types
 export interface ChartDataPoint {
   label: string;

@@ -1,37 +1,11 @@
-import { useState } from 'react';
-import { KpiGrid, BarChart, FormSheet } from '@vrushabh-b/oneiot-ui';
+import { KpiGrid, BarChart } from '@vrushabh-b/oneiot-ui';
 import type { KpiGridItem } from '@vrushabh-b/oneiot-ui';
-import { Badge, Button } from '@vrushabh-b/oneiot-ui';
-import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, XCircle, Database, Users, Zap, TrendingUp as TrendUp, Plus, MapPin } from 'lucide-react';
+import { Badge } from '@vrushabh-b/oneiot-ui';
+import { TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle2, XCircle, Database, Users, Zap, TrendingUp as TrendUp, Globe, RefreshCw } from 'lucide-react';
 import { networkMetrics, regionalFacilities } from '@/data/mockData';
 import { FacilitiesMap } from '@/components/map/FacilitiesMap';
-import { useSetup } from '@/contexts/SetupContext';
-import type { Region } from '@/contexts/SetupContext';
-
-const FIELD = 'w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#02A19E]';
-
-const emptyRegion = (): Omit<Region, 'id' | 'createdAt'> => ({
-  name: '', code: '', states: '', headName: '', headEmail: '', headMobile: '',
-});
 
 export function HQDashboard() {
-  const { regions, addRegion } = useSetup();
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [form, setForm] = useState(emptyRegion());
-  const [saved, setSaved] = useState(false);
-
-  const upd = (k: keyof typeof form, v: string) => setForm(p => ({ ...p, [k]: v }));
-
-  const handleSave = () => {
-    addRegion(form);
-    setSaved(true);
-  };
-
-  const handleClose = () => {
-    setSheetOpen(false);
-    setSaved(false);
-    setForm(emptyRegion());
-  };
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -107,86 +81,14 @@ export function HQDashboard() {
 
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Network Overview</h2>
-          <p className="text-sm text-muted-foreground">{regions.length} custom region{regions.length !== 1 ? 's' : ''} configured</p>
+          <h1 className="text-lg font-semibold text-foreground">Pan-India Network</h1>
+          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+            <span className="flex items-center gap-1"><Globe className="h-3 w-3" />{networkMetrics.totalFacilities} facilities · {networkMetrics.growthRegions.length} regions</span>
+            <span className="flex items-center gap-1"><RefreshCw className="h-3 w-3" />Updated just now</span>
+          </div>
         </div>
-        <Button className="bg-[#02A19E] text-white hover:bg-[#02A19E]/90" onClick={() => setSheetOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Region
-        </Button>
       </div>
 
-      <FormSheet
-        open={sheetOpen}
-        onClose={handleClose}
-        title={<span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Create Region</span>}
-        description="Define a new geographic region and assign a regional head."
-        footer={!saved ? (
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={handleClose}>Cancel</Button>
-            <Button className="bg-[#02A19E] text-white hover:bg-[#02A19E]/90" onClick={handleSave} disabled={!form.name}>Save Region</Button>
-          </div>
-        ) : undefined}
-      >
-        {saved ? (
-          <div className="flex flex-col items-center gap-4 py-12">
-            <CheckCircle2 className="h-12 w-12 text-green-500" />
-            <p className="text-lg font-semibold text-foreground">Region Created</p>
-            <Badge className="bg-green-500/15 text-green-400 border-green-500/30">{form.name}</Badge>
-            <Button variant="outline" className="mt-4" onClick={handleClose}>Close</Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Region Name</label>
-              <input className={FIELD} placeholder="e.g. South India" value={form.name} onChange={e => upd('name', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Region Code</label>
-              <input className={FIELD} placeholder="e.g. SOUTH" value={form.code} onChange={e => upd('code', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">States / UTs Covered</label>
-              <input className={FIELD} placeholder="e.g. Tamil Nadu, Karnataka, Kerala" value={form.states} onChange={e => upd('states', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Regional Head Name</label>
-              <input className={FIELD} placeholder="Full name" value={form.headName} onChange={e => upd('headName', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Head Email</label>
-              <input type="email" className={FIELD} placeholder="email@company.in" value={form.headEmail} onChange={e => upd('headEmail', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Head Mobile</label>
-              <input type="tel" className={FIELD} placeholder="10-digit mobile" value={form.headMobile} onChange={e => upd('headMobile', e.target.value)} />
-            </div>
-          </div>
-        )}
-      </FormSheet>
-
-      {regions.length > 0 && (
-        <div className="bg-card rounded-xl border border-border">
-          <div className="px-5 py-3 border-b border-border flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-foreground">Configured Regions</h3>
-            <span className="text-xs text-muted-foreground">{regions.length} region{regions.length !== 1 ? 's' : ''}</span>
-          </div>
-          <div className="divide-y divide-border">
-            {regions.map(r => (
-              <div key={r.id} className="px-5 py-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">{r.name}</p>
-                  <p className="text-xs text-muted-foreground">{r.states || 'No states specified'}</p>
-                </div>
-                <div className="text-right">
-                  <Badge variant="secondary">{r.code}</Badge>
-                  <p className="text-xs text-muted-foreground mt-1">{r.headName || '—'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
       <KpiGrid items={kpiItems} cols={4} />
 
       {/* ── 2. NETWORK HEALTH STRIP ── */}
