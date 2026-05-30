@@ -1,11 +1,12 @@
+import { useState } from 'react';
 import {
   StatCard,
   BarChart,
   AreaChart,
-  ProgressRing,
+
 } from '@vrushabh-b/oneiot-ui';
 import type { AlertFeedItem } from '@vrushabh-b/oneiot-ui';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter, CardAction, Badge } from '@vrushabh-b/oneiot-ui';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, Badge } from '@vrushabh-b/oneiot-ui';
 import {
   Thermometer,
   Droplets,
@@ -19,15 +20,22 @@ import {
   TrendingDown,
   Sun,
   IndianRupee,
+  ChevronRight,
 } from 'lucide-react';
 import { chennaiFacility, energyHistory, outsideConditions } from '@/data/mockData';
+import { ZoneDetailPage } from '@/components/zones/ZoneDetailPage';
 
 const TEAL = '#02A19E';
 const PURPLE = '#6333ff';
-const AMBER = '#f59e0b';
+
 
 export function FacilityDashboard() {
   const facility = chennaiFacility;
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+
+  if (selectedZoneId) {
+    return <ZoneDetailPage zoneId={selectedZoneId} onBack={() => setSelectedZoneId(null)} />;
+  }
 
   const fmt = (v: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
@@ -196,106 +204,92 @@ export function FacilityDashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {facility.zones.map(zone => {
             const tempOk = zone.temperature.current >= zone.temperature.min && zone.temperature.current <= zone.temperature.max;
             const tempStatus = !tempOk ? 'critical' : Math.abs(zone.temperature.current - zone.temperature.target) > 2 ? 'warning' : 'ok';
             const humOk = zone.humidity.current >= zone.humidity.min && zone.humidity.current <= zone.humidity.max;
             const openDoorCount = zone.doors.filter(d => d.status === 'open').length;
             const topAlert = zone.alerts.sort((a, b) => (a.severity === 'critical' ? -1 : b.severity === 'critical' ? 1 : 0))[0];
-            const tempColor = tempStatus === 'critical' ? 'text-destructive' : tempStatus === 'warning' ? 'text-yellow-400' : 'text-green-400';
-            const tempBg = tempStatus === 'critical' ? 'bg-destructive/10 border-destructive/30' : tempStatus === 'warning' ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-green-500/10 border-green-500/30';
-
-            const typeBadgeVariant =
-              zone.type === 'frozen' ? 'secondary' :
-              zone.type === 'chill'  ? 'info' : 'success';
+            const tempColor = tempStatus === 'critical' ? 'text-destructive' : tempStatus === 'warning' ? 'text-yellow-400' : 'text-foreground';
+            const hasIssue = !!topAlert || openDoorCount > 0;
 
             return (
-              <Card key={zone.id} className="flex flex-col overflow-hidden">
-                <CardHeader>
-                  <div className="min-w-0">
-                    <CardTitle className="text-sm truncate">{zone.name}</CardTitle>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <Badge variant={typeBadgeVariant} className="capitalize text-[10px]">{zone.type}</Badge>
-                      {openDoorCount > 0 && (
-                        <Badge variant="warning" className="text-[10px] flex items-center gap-1">
-                          <DoorOpen className="h-2.5 w-2.5" />
-                          {openDoorCount} open
-                        </Badge>
-                      )}
-                      {zone.alerts.length > 0 && (
-                        <Badge
-                          variant={zone.alerts.some(a => a.severity === 'critical') ? 'destructive' : 'warning'}
-                          className="text-[10px] flex items-center gap-1"
-                        >
-                          <AlertTriangle className="h-2.5 w-2.5" />
-                          {zone.alerts.length}
-                        </Badge>
-                      )}
-                    </div>
+              <div
+                key={zone.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedZoneId(zone.id)}
+                onKeyDown={e => e.key === 'Enter' && setSelectedZoneId(zone.id)}
+                className="rounded-xl border border-border bg-card px-4 py-3.5 space-y-3 cursor-pointer hover:border-[#02A19E]/50 hover:bg-muted/30 transition-all"
+              >
+
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`h-2 w-2 rounded-full flex-shrink-0 ${hasIssue ? (topAlert?.severity === 'critical' ? 'bg-destructive' : 'bg-yellow-400') : 'bg-green-500'}`} />
+                    <p className="text-sm font-semibold text-foreground truncate">{zone.name}</p>
+                    <span className="text-[10px] text-muted-foreground capitalize border border-border rounded px-1.5 py-0.5 flex-shrink-0">{zone.type}</span>
                   </div>
-                  <CardAction>
-                    <div className="flex flex-col items-end gap-1">
-                      <p className="text-[10px] text-muted-foreground">{zone.capacity} T cap</p>
-                      <ProgressRing
-                        value={zone.occupancy}
-                        size={40}
-                        strokeWidth={4}
-                        color={zone.occupancy > 90 ? AMBER : TEAL}
-                        showValue
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="text-right">
+                      <p className="text-xs font-semibold text-foreground leading-none">{zone.occupancy}%</p>
+                      <p className="text-[10px] text-muted-foreground leading-none mt-0.5">{zone.capacity} T</p>
+                    </div>
+                    <div className="w-10 h-1.5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${zone.occupancy > 90 ? 'bg-yellow-400' : 'bg-[#02A19E]'}`}
+                        style={{ width: `${zone.occupancy}%` }}
                       />
                     </div>
-                  </CardAction>
-                </CardHeader>
-
-                <CardContent className="grid grid-cols-2 gap-2 pb-3">
-                  <div className={`rounded-lg border px-3 py-2.5 ${tempBg}`}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Thermometer className={`h-3.5 w-3.5 ${tempColor}`} />
-                      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Temperature</span>
-                    </div>
-                    <p className={`text-xl font-bold leading-none ${tempColor}`}>{zone.temperature.current}°C</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Target {zone.temperature.target}°C · {zone.temperature.min}–{zone.temperature.max}°C</p>
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
                   </div>
-                  <div className={`rounded-lg border px-3 py-2.5 ${humOk ? 'bg-blue-500/10 border-blue-500/30' : 'bg-yellow-500/10 border-yellow-500/30'}`}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Droplets className={`h-3.5 w-3.5 ${humOk ? 'text-blue-400' : 'text-yellow-400'}`} />
-                      <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">Humidity</span>
-                    </div>
-                    <p className={`text-xl font-bold leading-none ${humOk ? 'text-blue-400' : 'text-yellow-400'}`}>{zone.humidity.current}%</p>
-                    <p className="text-[10px] text-muted-foreground mt-1">Target {zone.humidity.target}% · {zone.humidity.min}–{zone.humidity.max}%</p>
+                </div>
+
+                <div className="grid grid-cols-4 divide-x divide-border">
+                  <div className="pr-3">
+                    <p className="text-[10px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                      <Thermometer className="h-2.5 w-2.5" />Temp
+                    </p>
+                    <p className={`text-sm font-bold leading-none ${tempColor}`}>{zone.temperature.current}°C</p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5">{zone.temperature.min}–{zone.temperature.max}°C</p>
                   </div>
-                </CardContent>
+                  <div className="px-3">
+                    <p className="text-[10px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                      <Droplets className="h-2.5 w-2.5" />Humidity
+                    </p>
+                    <p className={`text-sm font-bold leading-none ${humOk ? 'text-foreground' : 'text-yellow-400'}`}>{zone.humidity.current}%</p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5">{zone.humidity.min}–{zone.humidity.max}%</p>
+                  </div>
+                  <div className="px-3">
+                    <p className="text-[10px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                      <Zap className="h-2.5 w-2.5" />Energy
+                    </p>
+                    <p className="text-sm font-bold leading-none text-foreground">{zone.energy.consumption}</p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5">kWh</p>
+                  </div>
+                  <div className="pl-3">
+                    <p className="text-[10px] text-muted-foreground mb-0.5 flex items-center gap-1">
+                      <DoorOpen className="h-2.5 w-2.5" />Doors
+                    </p>
+                    <p className={`text-sm font-bold leading-none ${openDoorCount > 0 ? 'text-yellow-400' : 'text-foreground'}`}>
+                      {openDoorCount}<span className="text-[10px] font-normal text-muted-foreground">/{zone.doors.length}</span>
+                    </p>
+                    <p className="text-[9px] text-muted-foreground mt-0.5">{openDoorCount > 0 ? 'open' : 'closed'}</p>
+                  </div>
+                </div>
 
-                <CardContent className="grid grid-cols-2 gap-2 pt-0 pb-3">
-                  {[
-                    { icon: Zap, label: 'Energy', value: zone.energy.consumption, unit: 'kWh', warn: false },
-                    { icon: DoorOpen, label: 'Doors', value: openDoorCount, unit: `/${zone.doors.length}`, warn: openDoorCount > 0 },
-                  ].map(({ icon: Icon, label, value, unit, warn }) => (
-                    <div key={label} className="flex flex-col items-center gap-1 rounded-lg bg-muted/50 py-2 px-1">
-                      <Icon className={`h-3.5 w-3.5 ${warn ? 'text-yellow-400' : 'text-muted-foreground'}`} />
-                      <p className={`text-xs font-bold leading-none ${warn ? 'text-yellow-400' : 'text-foreground'}`}>
-                        {value}<span className="text-[9px] font-normal text-muted-foreground ml-0.5">{unit}</span>
-                      </p>
-                      <p className="text-[9px] text-muted-foreground leading-none">{label}</p>
-                    </div>
-                  ))}
-                </CardContent>
-
-                <CardFooter className={`mt-auto border-t px-4 py-2.5 flex items-start gap-2 text-xs ${topAlert ? (topAlert.severity === 'critical' ? 'bg-destructive/10 border-destructive/30 text-destructive' : 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400') : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
-                  {topAlert ? (
-                    <>
-                      <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-0.5" />
-                      <span className="line-clamp-2 leading-snug">{topAlert.message}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="h-1.5 w-1.5 rounded-full bg-green-400 flex-shrink-0 mt-1" />
-                      All systems normal
-                    </>
-                  )}
-                </CardFooter>
-              </Card>
+                {topAlert ? (
+                  <div className={`flex items-start gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] leading-snug border ${topAlert.severity === 'critical' ? 'bg-destructive/10 border-destructive/20 text-destructive' : 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400'}`}>
+                    <AlertTriangle className="h-2.5 w-2.5 flex-shrink-0 mt-0.5" />
+                    <span className="line-clamp-1">{topAlert.message}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[10px] text-green-400 bg-green-500/5 border border-green-500/15">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 flex-shrink-0" />
+                    All systems normal
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { FormSheet, Badge, Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Separator, ProgressRing } from '@vrushabh-b/oneiot-ui';
+import { FormSheet, Badge, Button, Card, CardContent, CardHeader, CardTitle, CardDescription, Separator, ProgressRing, AdvancedSelect } from '@vrushabh-b/oneiot-ui';
 import {
   Warehouse, MapPin, Mail, Phone, Plus, ChevronRight,
   ChevronDown, Thermometer, Zap, Package, Calendar,
-  DoorOpen, Activity,
+  DoorOpen, Activity, ArrowRight,
 } from 'lucide-react';
 import { useSetup } from '@/contexts/SetupContext';
 import type { FacilitySetup } from '@/contexts/SetupContext';
@@ -12,15 +12,25 @@ import { regionalFacilities } from '@/data/mockData';
 const TEAL = '#02A19E';
 const FIELD = 'w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#02A19E]';
 
+const USERS = [
+  { value: 'u1', label: 'Arjun Mehta', description: 'arjun.mehta@coldguard.in' },
+  { value: 'u2', label: 'Priya Nair', description: 'priya.nair@coldguard.in' },
+  { value: 'u3', label: 'Suresh Sharma', description: 'suresh.s@coldguard.in' },
+  { value: 'u4', label: 'Anita Desai', description: 'anita.d@coldguard.in' },
+  { value: 'u5', label: 'Rajesh Kumar', description: 'rajesh.k@coldguard.in' },
+  { value: 'u6', label: 'Meena Pillai', description: 'meena.p@coldguard.in' },
+];
+
 const emptyFacility = (): Omit<FacilitySetup, 'id' | 'createdAt'> => ({
   regionId: '', name: '', location: '', address: '', latitude: '', longitude: '',
-  totalCapacity: '', licenseNumber: '', fssaiLicense: '', managerName: '', managerEmail: '', managerMobile: '',
+  totalCapacity: '', licenseNumber: '', fssaiLicense: '',
+  managerId: '', managerName: '', managerEmail: '', managerMobile: '',
 });
 
 const fmt = (v: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v);
 
-export function FacilitiesPage() {
+export function FacilitiesPage({ onSelectFacility }: { onSelectFacility?: (id: string) => void }) {
   const { regions, facilities, addFacility } = useSetup();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState(emptyFacility());
@@ -119,16 +129,24 @@ export function FacilitiesPage() {
               <input className={FIELD} placeholder="14-digit FSSAI" value={form.fssaiLicense} onChange={e => upd('fssaiLicense', e.target.value)} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Facility Manager Name</label>
-              <input className={FIELD} placeholder="Full name" value={form.managerName} onChange={e => upd('managerName', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Manager Email</label>
-              <input type="email" className={FIELD} placeholder="email@company.in" value={form.managerEmail} onChange={e => upd('managerEmail', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Manager Mobile</label>
-              <input type="tel" className={FIELD} placeholder="10-digit mobile" value={form.managerMobile} onChange={e => upd('managerMobile', e.target.value)} />
+              <label className="text-xs font-medium text-muted-foreground">Facility Manager</label>
+              <AdvancedSelect
+                placeholder="Select a manager"
+                options={USERS}
+                searchable
+                value={form.managerId}
+                onValueChange={v => {
+                  const val = (Array.isArray(v) ? v[0] : v) as string;
+                  const user = USERS.find(u => u.value === val);
+                  setForm(p => ({
+                    ...p,
+                    managerId: val ?? '',
+                    managerName: user?.label ?? '',
+                    managerEmail: user?.description ?? '',
+                    managerMobile: '',
+                  }));
+                }}
+              />
             </div>
           </div>
         )}
@@ -337,12 +355,23 @@ export function FacilitiesPage() {
                                       {zoneAlerts > 0 && <Badge variant="destructive" className="text-[10px]">{zoneAlerts}</Badge>}
                                     </div>
                                   </div>
-                                );
-                              })}
-                            </div>
-                          </div>
+                                 );
+                               })}
+                             </div>
+                           </div>
 
                         </div>
+                        {onSelectFacility && (
+                          <div className="flex justify-end mt-4">
+                            <Button
+                              size="sm"
+                              className="bg-[#02A19E] text-white hover:bg-[#02A19E]/90"
+                              onClick={e => { e.stopPropagation(); onSelectFacility(facility.id); }}
+                            >
+                              View Dashboard <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

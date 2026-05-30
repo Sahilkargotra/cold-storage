@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { FormSheet, Badge, Button, Card, CardContent, CardHeader, CardTitle, CardDescription } from '@vrushabh-b/oneiot-ui';
+import { FormSheet, Badge, Button, Card, CardContent, CardHeader, CardTitle, CardDescription, AdvancedSelect } from '@vrushabh-b/oneiot-ui';
 import { Separator } from '@vrushabh-b/oneiot-ui';
 import {
   Globe, MapPin, Mail, Phone, Plus, ChevronRight,
-  ChevronDown, Building2, Calendar, Package,
+  ChevronDown, Building2, Calendar, Package, ArrowRight,
 } from 'lucide-react';
 import { useSetup } from '@/contexts/SetupContext';
 import type { Region } from '@/contexts/SetupContext';
@@ -12,35 +12,44 @@ const TEAL = '#02A19E';
 
 const FIELD = 'w-full rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[#02A19E]';
 
+const USERS = [
+  { value: 'u1', label: 'Arjun Mehta', description: 'arjun.mehta@coldguard.in' },
+  { value: 'u2', label: 'Priya Nair', description: 'priya.nair@coldguard.in' },
+  { value: 'u3', label: 'Suresh Sharma', description: 'suresh.s@coldguard.in' },
+  { value: 'u4', label: 'Anita Desai', description: 'anita.d@coldguard.in' },
+  { value: 'u5', label: 'Rajesh Kumar', description: 'rajesh.k@coldguard.in' },
+  { value: 'u6', label: 'Meena Pillai', description: 'meena.p@coldguard.in' },
+];
+
 const emptyRegion = (): Omit<Region, 'id' | 'createdAt'> => ({
-  name: '', code: '', states: '', headName: '', headEmail: '', headMobile: '',
+  name: '', code: '', states: '', headId: '', headName: '', headEmail: '', headMobile: '',
 });
 
 const MOCK_REGIONS: (Region & { facilityCount: number; totalCapacity: number; status: 'active' | 'partial' })[] = [
   {
     id: 'mock-south', name: 'South India', code: 'SOUTH',
     states: 'Tamil Nadu, Karnataka, Kerala, Andhra Pradesh',
-    headName: 'Priya Nair', headEmail: 'priya.nair@coldguard.in', headMobile: '9876543210',
+    headId: 'u2', headName: 'Priya Nair', headEmail: 'priya.nair@coldguard.in', headMobile: '9876543210',
     createdAt: '2024-01-15T10:00:00',
     facilityCount: 4, totalCapacity: 7800, status: 'active',
   },
   {
     id: 'mock-north', name: 'North India', code: 'NORTH',
     states: 'Delhi, Haryana, Punjab, Uttar Pradesh, Rajasthan',
-    headName: 'Suresh Sharma', headEmail: 'suresh.s@coldguard.in', headMobile: '9123456780',
+    headId: 'u3', headName: 'Suresh Sharma', headEmail: 'suresh.s@coldguard.in', headMobile: '9123456780',
     createdAt: '2024-02-01T10:00:00',
     facilityCount: 3, totalCapacity: 6200, status: 'active',
   },
   {
     id: 'mock-west', name: 'West India', code: 'WEST',
     states: 'Maharashtra, Gujarat, Goa',
-    headName: 'Anita Desai', headEmail: 'anita.d@coldguard.in', headMobile: '9988776655',
+    headId: 'u4', headName: 'Anita Desai', headEmail: 'anita.d@coldguard.in', headMobile: '9988776655',
     createdAt: '2024-03-10T10:00:00',
     facilityCount: 2, totalCapacity: 4500, status: 'partial',
   },
 ];
 
-export function RegionsPage() {
+export function RegionsPage({ onSelectRegion }: { onSelectRegion?: (id: string) => void }) {
   const { regions, facilities, addRegion } = useSetup();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [form, setForm] = useState(emptyRegion());
@@ -108,16 +117,24 @@ export function RegionsPage() {
               <input className={FIELD} placeholder="e.g. Tamil Nadu, Karnataka, Kerala" value={form.states} onChange={e => upd('states', e.target.value)} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Regional Head Name</label>
-              <input className={FIELD} placeholder="Full name" value={form.headName} onChange={e => upd('headName', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Head Email</label>
-              <input type="email" className={FIELD} placeholder="email@company.in" value={form.headEmail} onChange={e => upd('headEmail', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Head Mobile</label>
-              <input type="tel" className={FIELD} placeholder="10-digit mobile" value={form.headMobile} onChange={e => upd('headMobile', e.target.value)} />
+              <label className="text-xs font-medium text-muted-foreground">Regional Head</label>
+              <AdvancedSelect
+                placeholder="Select a regional head"
+                options={USERS}
+                searchable
+                value={form.headId}
+                onValueChange={v => {
+                  const val = (Array.isArray(v) ? v[0] : v) as string;
+                  const user = USERS.find(u => u.value === val);
+                  setForm(p => ({
+                    ...p,
+                    headId: val ?? '',
+                    headName: user?.label ?? '',
+                    headEmail: user?.description ?? '',
+                    headMobile: '',
+                  }));
+                }}
+              />
             </div>
           </div>
         )}
@@ -293,11 +310,20 @@ export function RegionsPage() {
                               </div>
                             )}
                           </div>
-                          <Button variant="outline" size="sm" className="w-full">
-                            <Mail className="h-3.5 w-3.5 mr-2" />
-                            Contact
-                          </Button>
-                        </div>
+                           <Button variant="outline" size="sm" className="w-full">
+                             <Mail className="h-3.5 w-3.5 mr-2" />
+                             Contact
+                           </Button>
+                           {onSelectRegion && (
+                             <Button
+                               size="sm"
+                               className="w-full bg-[#02A19E] text-white hover:bg-[#02A19E]/90 mt-1"
+                               onClick={e => { e.stopPropagation(); onSelectRegion(region.id); }}
+                             >
+                               View Dashboard <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                             </Button>
+                           )}
+                         </div>
 
                       </div>
                     </div>

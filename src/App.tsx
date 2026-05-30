@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ThemeProvider, SidebarProvider, SidebarInset, SidebarTrigger, Sheet } from '@vrushabh-b/oneiot-ui';
 import {
-  Building2, Map, Network, AlertTriangle, Settings,
+  AlertTriangle, Settings,
   ClipboardCheck, BarChart2,
-  ChevronDown, Globe, Warehouse, Layers, BookOpen,
+  ChevronDown, Globe, Warehouse, Layers, BookOpen, Home,
 } from 'lucide-react';
 import { AppSidebar } from './components/Sidebar';
 import { FacilityDashboardWithTabs, FacilityTabBar, FacilityAlertsButton, FacilityAlertsSheetContent } from './components/dashboard/FacilityDashboardWithTabs';
@@ -29,14 +29,15 @@ type ViewType =
   | 'bookings' | 'inspection'
   | 'reports' | 'alerts'
   | 'regions' | 'facilities' | 'zones' | 'zone-detail'
-  | 'settings';
+  | 'settings'
+  | 'facility-detail' | 'regional-detail';
 
 type Role = 'facility' | 'regional' | 'hq';
 
 const VIEW_LABELS: Record<ViewType, string> = {
-  facility: 'Facility Monitor',
-  regional: 'Regional View',
-  hq: 'HQ Network',
+  facility: 'Home',
+  regional: 'Home',
+  hq: 'Home',
   bookings: 'Bookings',
   inspection: 'Periodic Inspection',
   alerts: 'Alerts',
@@ -46,12 +47,14 @@ const VIEW_LABELS: Record<ViewType, string> = {
   zones: 'Zones',
   'zone-detail': 'Zone Detail',
   settings: 'Settings',
+  'facility-detail': 'Facility Dashboard',
+  'regional-detail': 'Regional Dashboard',
 };
 
 const VIEW_PATHS: Record<ViewType, string> = {
-  facility: '/facility',
-  regional: '/regional',
-  hq: '/hq',
+  facility: '/home',
+  regional: '/home',
+  hq: '/home',
   bookings: '/bookings',
   inspection: '/inspection',
   alerts: '/alerts',
@@ -61,6 +64,8 @@ const VIEW_PATHS: Record<ViewType, string> = {
   zones: '/zones',
   'zone-detail': '/zones',
   settings: '/settings',
+  'facility-detail': '/facilities',
+  'regional-detail': '/regions',
 };
 
 const ROLE_META: Record<Role, { label: string; sublabel: string; name: string; email: string }> = {
@@ -90,19 +95,53 @@ const ROLE_DEFAULT_VIEW: Record<Role, ViewType> = {
   hq: 'hq',
 };
 
-const ALL_NAV_ITEMS = [
-  { title: 'Facility Monitor', url: '/facility',    icon: Building2,      roles: ['facility', 'regional', 'hq'] as Role[] },
-  { title: 'Regional View',    url: '/regional',    icon: Map,            roles: ['regional', 'hq'] as Role[] },
-  { title: 'HQ Network',       url: '/hq',          icon: Network,        roles: ['hq'] as Role[] },
-  { title: 'Bookings',         url: '/bookings',    icon: BookOpen,       roles: ['facility'] as Role[] },
-  { title: 'Inspection',       url: '/inspection',  icon: ClipboardCheck, roles: ['facility'] as Role[] },
-  { title: 'Regions',          url: '/regions',     icon: Globe,          roles: ['regional', 'hq'] as Role[] },
-  { title: 'Facilities',       url: '/facilities',  icon: Warehouse,      roles: ['regional', 'hq'] as Role[] },
-  { title: 'Zones',            url: '/zones',       icon: Layers,         roles: ['facility', 'regional', 'hq'] as Role[] },
-  { title: 'Alerts',           url: '/alerts',      icon: AlertTriangle,  roles: ['facility', 'regional', 'hq'] as Role[] },
-  { title: 'Reports',          url: '/reports',     icon: BarChart2,      roles: ['facility', 'regional', 'hq'] as Role[] },
-  { title: 'Settings',         url: '/settings',    icon: Settings,       roles: ['facility', 'regional', 'hq'] as Role[] },
-];
+const ROLE_HOME_VIEW: Record<Role, ViewType> = {
+  facility: 'facility',
+  regional: 'regional',
+  hq: 'hq',
+};
+
+const ROLE_NAV_ITEMS: Record<Role, { title: string; url: string; icon: typeof Home }[]> = {
+  facility: [
+    { title: 'Home',       url: '/home',       icon: Home },
+    { title: 'Zones',      url: '/zones',       icon: Layers },
+    { title: 'Bookings',   url: '/bookings',    icon: BookOpen },
+    { title: 'Inspection', url: '/inspection',  icon: ClipboardCheck },
+    { title: 'Alerts',     url: '/alerts',      icon: AlertTriangle },
+    { title: 'Reports',    url: '/reports',     icon: BarChart2 },
+    { title: 'Settings',   url: '/settings',    icon: Settings },
+  ],
+  regional: [
+    { title: 'Home',         url: '/home',        icon: Home },
+    { title: 'Facilities',   url: '/facilities',  icon: Warehouse },
+    { title: 'Alerts',       url: '/alerts',      icon: AlertTriangle },
+    { title: 'Reports',      url: '/reports',     icon: BarChart2 },
+    { title: 'Settings',     url: '/settings',    icon: Settings },
+  ],
+  hq: [
+    { title: 'Home',         url: '/home',        icon: Home },
+    { title: 'Regions',      url: '/regions',     icon: Globe },
+    { title: 'Facilities',   url: '/facilities',  icon: Warehouse },
+    { title: 'Alerts',       url: '/alerts',      icon: AlertTriangle },
+    { title: 'Reports',      url: '/reports',     icon: BarChart2 },
+    { title: 'Settings',     url: '/settings',    icon: Settings },
+  ],
+};
+
+function resolveView(url: string, role: Role): ViewType {
+  if (url === '/home') return ROLE_HOME_VIEW[role];
+  const map: Record<string, ViewType> = {
+    '/bookings': 'bookings',
+    '/inspection': 'inspection',
+    '/alerts': 'alerts',
+    '/reports': 'reports',
+    '/regions': 'regions',
+    '/facilities': 'facilities',
+    '/zones': 'zones',
+    '/settings': 'settings',
+  };
+  return map[url] ?? ROLE_HOME_VIEW[role];
+}
 
 function RoleSwitcher({ role, onRoleChange }: { role: Role; onRoleChange: (r: Role) => void }) {
   const meta = ROLE_META[role];
@@ -132,19 +171,26 @@ function App() {
   const [currentView, setCurrentView] = useState<ViewType>('facility');
   const [facilityTab, setFacilityTab] = useState('operations');
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string | null>(null);
+  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
 
   const handleRoleChange = (newRole: Role) => {
     setRole(newRole);
     setCurrentView(ROLE_DEFAULT_VIEW[newRole]);
+    setSelectedFacilityId(null);
+    setSelectedRegionId(null);
   };
 
-  const navItems = ALL_NAV_ITEMS.filter(item => item.roles.includes(role));
+  const navItems = ROLE_NAV_ITEMS[role];
 
-  const currentPath = VIEW_PATHS[currentView];
+  const homeViews: ViewType[] = ['facility', 'regional', 'hq'];
+  const currentPath = homeViews.includes(currentView) ? '/home' : VIEW_PATHS[currentView];
 
   const handleNavigate = (url: string) => {
-    const view = (Object.entries(VIEW_PATHS) as [ViewType, string][]).find(([, path]) => path === url)?.[0];
-    if (view) setCurrentView(view);
+    const view = resolveView(url, role);
+    setCurrentView(view);
+    if (url !== '/facilities') setSelectedFacilityId(null);
+    if (url !== '/regions') setSelectedRegionId(null);
   };
 
   const renderDashboard = () => {
@@ -156,8 +202,18 @@ function App() {
       case 'inspection':  return <InspectionPage />;
       case 'reports':     return <ReportsPage />;
       case 'alerts':      return <AlertsPage />;
-      case 'regions':     return <RegionsPage />;
-      case 'facilities':  return <FacilitiesPage />;
+      case 'regions':     return (
+        <RegionsPage
+          onSelectRegion={id => { setSelectedRegionId(id); setCurrentView('regional-detail'); }}
+        />
+      );
+      case 'facilities':  return (
+        <FacilitiesPage
+          onSelectFacility={role === 'regional' || role === 'hq'
+            ? (id => { setSelectedFacilityId(id); setCurrentView('facility-detail'); })
+            : undefined}
+        />
+      );
       case 'zones':       return (
         <ZonesPage
           onSelectZone={id => { setSelectedZoneId(id); setCurrentView('zone-detail'); }}
@@ -169,12 +225,26 @@ function App() {
           onBack={() => { setSelectedZoneId(null); setCurrentView('zones'); }}
         />
       ) : null;
+      case 'facility-detail': return (
+        <FacilityDashboardWithTabs
+          tab={facilityTab}
+          setTab={setFacilityTab}
+          facilityId={selectedFacilityId ?? undefined}
+          onBack={() => { setSelectedFacilityId(null); setCurrentView('facilities'); }}
+        />
+      );
+      case 'regional-detail': return (
+        <RegionalDashboardWithTabs
+          regionId={selectedRegionId ?? undefined}
+          onBack={() => { setSelectedRegionId(null); setCurrentView('regions'); }}
+        />
+      );
       case 'settings':    return <SettingsPage />;
     }
   };
 
   const renderHeaderExtras = () => {
-    if (currentView === 'facility') {
+    if (currentView === 'facility' || currentView === 'facility-detail') {
       return (
         <>
           <div className="flex-1" />
@@ -185,6 +255,12 @@ function App() {
     }
     return <div className="flex-1" />;
   };
+
+  const headerLabel = (() => {
+    if (currentView === 'facility-detail' && selectedFacilityId) return `Facility: ${selectedFacilityId}`;
+    if (currentView === 'regional-detail' && selectedRegionId) return `Region: ${selectedRegionId}`;
+    return VIEW_LABELS[currentView];
+  })();
 
   return (
     <ThemeProvider defaultMode="dark" applyToDocument>
@@ -203,7 +279,7 @@ function App() {
             <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-3 border-b border-border bg-background/80 backdrop-blur px-4">
               <SidebarTrigger className="-ml-1" />
               <div className="h-4 w-px bg-border" />
-              <span className="text-sm font-medium text-foreground">{VIEW_LABELS[currentView]}</span>
+              <span className="text-sm font-medium text-foreground">{headerLabel}</span>
               {renderHeaderExtras()}
               <RoleSwitcher role={role} onRoleChange={handleRoleChange} />
             </header>
@@ -212,7 +288,7 @@ function App() {
             </main>
           </SidebarInset>
         </SidebarProvider>
-        {currentView === 'facility' && <FacilityAlertsSheetContent />}
+        {(currentView === 'facility' || currentView === 'facility-detail') && <FacilityAlertsSheetContent />}
         </Sheet>
         </BookingsProvider>
         </WorkflowProvider>

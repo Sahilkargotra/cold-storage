@@ -102,14 +102,26 @@ export function FacilityTabBar({ tab, setTab }: FacilityTabBarProps) {
 interface FacilityDashboardWithTabsProps {
   tab: string;
   setTab: (t: string) => void;
+  facilityId?: string;
+  onBack?: () => void;
 }
 
-export function FacilityDashboardWithTabs({ tab, setTab }: FacilityDashboardWithTabsProps) {
+export function FacilityDashboardWithTabs({ tab, setTab, onBack }: FacilityDashboardWithTabsProps) {
   return (
-    <Tabs value={tab} onValueChange={setTab} className="w-full">
-      <TabsContent value="operations" className="space-y-6">
-        <FacilityDashboard />
-      </TabsContent>
-    </Tabs>
+    <div className="space-y-4">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Back to Facilities
+        </button>
+      )}
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
+        <TabsContent value="operations" className="space-y-6">
+          <FacilityDashboard />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

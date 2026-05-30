@@ -6,6 +6,7 @@ export interface Region {
   name: string;
   code: string;
   states: string;
+  headId: string;
   headName: string;
   headEmail: string;
   headMobile: string;
@@ -23,6 +24,7 @@ export interface FacilitySetup {
   totalCapacity: string;
   licenseNumber: string;
   fssaiLicense: string;
+  managerId: string;
   managerName: string;
   managerEmail: string;
   managerMobile: string;

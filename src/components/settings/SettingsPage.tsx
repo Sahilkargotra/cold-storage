@@ -10,16 +10,17 @@ import {
 import {
   TrendingUp, Users, Shield, Palette, Cpu, Package,
   Plus, Edit2, Trash2, Check, Wifi, WifiOff, Wrench,
-  CheckCircle2,
+  CheckCircle2, Tag,
 } from 'lucide-react';
 import { RevenueDashboard } from '@/components/revenue/RevenueDashboard';
 
-type SettingsTab = 'revenue' | 'users' | 'user-management' | 'white-labelling' | 'devices' | 'products';
+type SettingsTab = 'revenue' | 'users' | 'user-management' | 'user-roles' | 'white-labelling' | 'devices' | 'products';
 
 const TABS: { id: SettingsTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'revenue',          label: 'Revenue',          icon: TrendingUp },
   { id: 'users',            label: 'Users',             icon: Users },
   { id: 'user-management',  label: 'User Management',   icon: Shield },
+  { id: 'user-roles',       label: 'User Roles',        icon: Tag },
   { id: 'white-labelling',  label: 'White Labelling',   icon: Palette },
   { id: 'devices',          label: 'Devices',           icon: Cpu },
   { id: 'products',         label: 'Products',          icon: Package },
@@ -200,6 +201,129 @@ const ACCESS_TOGGLES = [
   { label: 'IP Allowlisting',            description: 'Restrict access to specific IP ranges.',   defaultOn: false },
   { label: 'Audit Logging',              description: 'Log all user actions for compliance.',      defaultOn: true },
 ];
+
+const DEFAULT_SYSTEM_ROLES = [
+  { id: 'r1', name: 'HQ Admin',             type: 'system',  color: '#02A19E', description: 'Full access to all modules, settings, and user management across the entire network.' },
+  { id: 'r2', name: 'Regional Manager',     type: 'system',  color: '#6333ff', description: 'Access to all facilities within their region. Can approve transfers and view regional dashboards.' },
+  { id: 'r3', name: 'Facility Manager',     type: 'system',  color: '#f59e0b', description: 'Full access to a single facility: zones, bookings, alerts, compliance, and IoT devices.' },
+  { id: 'r4', name: 'Operator',             type: 'system',  color: '#22c55e', description: 'Day-to-day operations: monitor zones, acknowledge alerts, manage bookings.' },
+  { id: 'r5', name: 'Viewer',               type: 'system',  color: '#8888a0', description: 'Read-only access to dashboards and reports. Cannot modify any data.' },
+];
+
+type CustomRole = { id: string; name: string; type: 'custom'; color: string; description: string };
+
+function UserRolesTab() {
+  const [customRoles, setCustomRoles] = useState<CustomRole[]>([
+    { id: 'cr1', name: 'Cold Chain Auditor', type: 'custom', color: '#ec4899', description: 'Audit cold chain compliance and generate FSSAI reports. Read-only except reports.' },
+    { id: 'cr2', name: 'Logistics Coordinator', type: 'custom', color: '#f97316', description: 'Manage inbound/outbound transfers and bookings. No access to financial data.' },
+  ]);
+  const [newRoleName, setNewRoleName] = useState('');
+  const [newRoleDesc, setNewRoleDesc] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const addRole = () => {
+    if (!newRoleName.trim()) return;
+    const colors = ['#a855f7', '#14b8a6', '#f43f5e', '#3b82f6', '#84cc16'];
+    setCustomRoles(prev => [
+      ...prev,
+      {
+        id: `cr${Date.now()}`,
+        name: newRoleName.trim(),
+        type: 'custom',
+        color: colors[prev.length % colors.length],
+        description: newRoleDesc.trim() || 'Custom role.',
+      },
+    ]);
+    setNewRoleName('');
+    setNewRoleDesc('');
+    setDialogOpen(false);
+  };
+
+  const removeCustomRole = (id: string) => setCustomRoles(prev => prev.filter(r => r.id !== id));
+
+  return (
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">User Roles</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Default system roles and custom roles used when creating users.</p>
+        </div>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="teal" size="sm"><Plus className="h-4 w-4 mr-1.5" />New Role</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create custom role</DialogTitle>
+              <DialogDescription>Add a role that will be available when inviting or editing users.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="role-name">Role Name</Label>
+                <Input id="role-name" placeholder="e.g. Zone Supervisor" value={newRoleName} onChange={e => setNewRoleName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="role-desc">Description</Label>
+                <Input id="role-desc" placeholder="What can this role do?" value={newRoleDesc} onChange={e => setNewRoleDesc(e.target.value)} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button variant="teal" onClick={addRole} disabled={!newRoleName.trim()}>Create Role</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">System Roles</p>
+        <div className="space-y-2">
+          {DEFAULT_SYSTEM_ROLES.map(role => (
+            <div key={role.id} className="flex items-center gap-3 rounded-lg border border-border px-4 py-3">
+              <span className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: role.color }} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-foreground">{role.name}</p>
+                  <Badge variant="secondary" className="text-[10px]">System</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">{role.description}</p>
+              </div>
+              <Button variant="ghost" size="icon" disabled><Edit2 className="h-3.5 w-3.5 text-muted-foreground/40" /></Button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Custom Roles</p>
+        {customRoles.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-8 text-center rounded-lg border border-dashed border-border">
+            <Tag className="h-6 w-6 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No custom roles yet. Create one above.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {customRoles.map(role => (
+              <div key={role.id} className="flex items-center gap-3 rounded-lg border border-border px-4 py-3">
+                <span className="inline-block h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: role.color }} />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-foreground">{role.name}</p>
+                    <Badge className="text-[10px] bg-[#02A19E]/15 text-[#02A19E] border-[#02A19E]/30">Custom</Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">{role.description}</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => removeCustomRole(role.id)}>
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function UserManagementTab() {
   const [toggles, setToggles] = useState<Record<string, boolean>>(
@@ -662,6 +786,7 @@ export function SettingsPage() {
       case 'revenue':         return <RevenueDashboard />;
       case 'users':           return <UsersTab />;
       case 'user-management': return <UserManagementTab />;
+      case 'user-roles':      return <UserRolesTab />;
       case 'white-labelling': return <WhiteLabellingTab />;
       case 'devices':         return <DevicesTab />;
       case 'products':        return <ProductsTab />;
